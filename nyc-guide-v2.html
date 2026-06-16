@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>NYC ’26</title>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="NYC ’26" />
+<meta name="theme-color" content="#FFFFFF" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23000'/%3E%3Ctext x='90' y='84' font-family='-apple-system,Helvetica,Arial' font-size='34' font-weight='700' fill='%23fff' text-anchor='middle'%3ENYC%3C/text%3E%3Ctext x='90' y='126' font-family='-apple-system,Helvetica,Arial' font-size='30' font-weight='400' fill='%230A84FF' text-anchor='middle'%3E’26%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<style>
+  :root{
+    --bg:#FFFFFF; --bg2:#F2F2F7; --card:#FFFFFF; --grouped:#FFFFFF;
+    --ink:#1D1D1F; --ink2:#3A3A3C; --muted:#8A8A8E; --muted2:#AEAEB2;
+    --hair:#E5E5EA; --hair2:#EDEDF0;
+    --blue:#0A84FF; --blue-press:#0070E0;
+    --d1:#E8720C; --d2:#1FA64A; --d3:#D69A00; --d4:#E5443B;
+    --sf:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --tabh:58px;
+    --r:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg2);color:var(--ink);font-family:var(--sf);-webkit-font-smoothing:antialiased;
+    line-height:1.45;letter-spacing:-.01em;
+    padding-bottom:calc(var(--tabh) + env(safe-area-inset-bottom));overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:480px;margin:0 auto;position:relative;min-height:100vh}
+
+  /* large nav title */
+  .nav{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--hair);
+    padding:calc(8px + env(safe-area-inset-top)) 18px 9px}
+  .nav-sm{font-size:13px;color:var(--muted);font-weight:500;display:flex;justify-content:space-between;align-items:center}
+  .nav-sm .pill{color:var(--blue);font-weight:600}
+  .view{display:none;animation:fade .28s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.view,.sheet{animation:none!important;transition:none!important}}
+
+  .pad{padding:6px 18px 30px}
+  h1.lg{font-size:32px;font-weight:700;letter-spacing:-.025em;margin:10px 0 2px}
+  .sub{font-size:15px;color:var(--muted);margin:0 0 6px}
+
+  /* hero countdown card */
+  .hero{background:var(--ink);color:#fff;border-radius:20px;padding:22px 22px 20px;margin:14px 0 8px;position:relative;overflow:hidden}
+  .hero .k{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#98989F;font-weight:600}
+  .hero .count{font-size:52px;font-weight:700;letter-spacing:-.03em;line-height:1;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+  .hero .when{font-size:14px;color:#C7C7CC;margin-top:10px}
+  .hero .when b{color:#fff;font-weight:600}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .stat{background:var(--card);border-radius:var(--r);padding:14px 16px;border:.5px solid var(--hair)}
+  .stat .sk{font-size:12px;color:var(--muted);font-weight:500}
+  .stat .sv{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:3px}
+  .stat .sv small{font-size:13px;font-weight:500;color:var(--muted)}
+  .ring{height:5px;background:var(--hair);border-radius:9px;margin-top:9px;overflow:hidden}
+  .ring i{display:block;height:100%;background:var(--blue);border-radius:9px;transition:width .7s cubic-bezier(.22,1,.36,1)}
+
+  /* section label (grouped list style) */
+  .glabel{font-size:13px;color:var(--muted);font-weight:500;margin:24px 4px 7px;text-transform:none}
+  .group{background:var(--card);border-radius:var(--r);border:.5px solid var(--hair);overflow:hidden}
+  .row{display:flex;align-items:center;gap:13px;padding:12px 15px;border-bottom:.5px solid var(--hair);cursor:pointer;position:relative}
+  .row:last-child{border-bottom:none}
+  .row:active{background:var(--bg2)}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .tile{width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:21px}
+  .row .rt{flex:1;min-width:0}
+  .row .rt .rn{font-size:16px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .rt .rd{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .row .chev{color:var(--muted2);font-size:17px;flex:none}
+  .row .rtime{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;flex:none;margin-right:2px}
+  .check{position:absolute;left:30px;top:30px;width:16px;height:16px;border-radius:50%;background:var(--d2);color:#fff;display:none;align-items:center;justify-content:center;font-size:10px;border:2px solid #fff}
+  .row.done .check{display:flex}
+
+  /* day chips on dashboard */
+  .chips{display:flex;gap:8px;margin-top:12px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .chip{flex:none;border:.5px solid var(--hair);background:var(--card);border-radius:13px;padding:11px 13px;min-width:118px;cursor:pointer}
+  .chip:active{background:var(--bg2)}
+  .chip .cd{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:500}
+  .chip .cn{font-size:15px;font-weight:600;letter-spacing:-.02em;margin-top:6px;line-height:1.15}
+  .chip .cc{font-size:12px;color:var(--muted);margin-top:4px}
+
+  .note{background:var(--card);border:.5px solid var(--hair);border-radius:var(--r);padding:15px 16px;font-size:14px;color:var(--ink2)}
+  .note p{margin:0}.note p+p{margin-top:10px}
+  .note b{font-weight:600;color:var(--ink)}
+
+  /* itinerary day header */
+  .dayhd{display:flex;align-items:center;gap:11px;margin:26px 4px 9px}
+  .dayhd .dnum{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex:none}
+  .dayhd .dh-t{font-size:19px;font-weight:700;letter-spacing:-.02em}
+  .dayhd .dh-d{font-size:13px;color:var(--muted);margin-top:0}
+  .dayhd .dh-r{margin-left:auto;font-size:12px;color:var(--muted);text-align:right;line-height:1.35}
+
+  /* MAP tab */
+  #mapFull{height:calc(100vh - var(--tabh) - env(safe-area-inset-bottom) - 112px);width:100%;background:var(--bg2)}
+  .segwrap{padding:10px 18px 8px;background:var(--bg2)}
+  .seg{display:flex;background:var(--bg2);border:.5px solid var(--hair);border-radius:11px;overflow:hidden;background:#E9E9EE}
+  .seg button{flex:1;border:none;background:none;padding:8px 4px;font-family:var(--sf);font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;border-radius:9px;margin:2px}
+  .seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .leaflet-popup-content{margin:11px 13px;font-family:var(--sf)}
+  .pop-n{font-weight:700;font-size:14px;letter-spacing:-.02em}
+  .pop-d{font-size:12px;color:var(--muted);margin:2px 0 7px}
+  .pop-b{display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:600;padding:5px 11px;border-radius:8px}
+  .pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);color:#fff;font-weight:700;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.35);border:2px solid #fff}
+  .pin span{transform:rotate(-45deg)}
+
+  /* detail sheet */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:60;opacity:0;pointer-events:none;transition:.25s}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;max-width:480px;margin:0 auto;background:var(--bg2);
+    border-top-left-radius:14px;border-top-right-radius:14px;max-height:92vh;overflow-y:auto;
+    transform:translateY(102%);transition:transform .36s cubic-bezier(.22,1,.36,1);
+    padding-bottom:calc(28px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+  .sheet.open{transform:translateY(0)}
+  .grab{width:36px;height:5px;border-radius:9px;background:#C7C7CC;margin:8px auto 0}
+  .sheet-hero{height:150px;margin:12px 16px 0;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:flex-end}
+  .sheet-hero #sheetMap{position:absolute;inset:0}
+  .sheet-glyph{position:absolute;top:12px;left:14px;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:500}
+  .sheet-hd{padding:14px 18px 4px}
+  .sheet-eye{font-size:12px;font-weight:600;color:var(--muted)}
+  .sheet-title{font-size:26px;font-weight:700;letter-spacing:-.03em;margin:3px 0 2px;line-height:1.06}
+  .sheet-addr{font-size:13px;color:var(--muted)}
+  .acts{display:flex;gap:9px;padding:13px 18px 6px}
+  .act{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--card);border:.5px solid var(--hair);border-radius:12px;padding:11px;font-size:14px;font-weight:600;color:var(--blue);cursor:pointer}
+  .act:active{background:var(--bg2)}
+  .act.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .act.is-done{background:var(--d2);color:#fff;border-color:var(--d2)}
+  .act svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+  .sec{margin:18px 18px 0}
+  .sec-l{font-size:13px;color:var(--muted);font-weight:600;margin:0 2px 7px;display:flex;align-items:center;gap:7px}
+  .sbox{background:var(--card);border:.5px solid var(--hair);border-radius:var(--r);padding:14px 16px}
+  .sbox p{margin:0;font-size:15px;color:var(--ink2);line-height:1.5}
+  .sbox.story p{font-size:15px;line-height:1.62}
+  .ord{display:flex;gap:10px;padding:9px 0;border-bottom:.5px solid var(--hair)}
+  .ord:first-child{padding-top:0}.ord:last-child{border-bottom:none;padding-bottom:0}
+  .ord .om{flex:none;font-weight:700;color:var(--d3)}
+  .ord .ox{font-size:14px;color:var(--ink2)}.ord .ox b{color:var(--ink);font-weight:600}
+  .pay{display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding-top:12px;border-top:.5px solid var(--hair);font-size:13.5px;color:var(--ink2)}
+  .pay b{color:var(--ink);font-weight:600}
+  .tip{display:flex;gap:10px;font-size:14px;color:var(--ink2);padding:8px 0;border-bottom:.5px solid var(--hair);line-height:1.45}
+  .tip:first-child{padding-top:0}.tip:last-child{border-bottom:none;padding-bottom:0}
+  .tip .tm{color:var(--blue);font-weight:700;flex:none}
+  .nav-l{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid var(--hair)}
+  .nav-l:first-child{padding-top:0}.nav-l:last-child{border-bottom:none;padding-bottom:0}
+  .nav-l .nx{font-size:13.5px;color:var(--ink2)}.nav-l .nx b{color:var(--ink);font-weight:600}
+  .mb{width:21px;height:21px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:11.5px;color:#fff;flex:none}
+  .mb.blk{color:#1d1d1f}
+  .bset{display:flex;gap:4px;flex-wrap:wrap}
+  .nearrow{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:.5px solid var(--hair)}
+  .nearrow:first-child{padding-top:0}.nearrow:last-child{border-bottom:none;padding-bottom:0}
+  .nearrow .nglyph{font-size:18px;flex:none;margin-top:1px}
+  .nearrow .nn{font-size:15px;font-weight:600}
+  .nearrow .nd{font-size:13px;color:var(--muted);margin-top:1px}
+
+  /* tabs */
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:480px;margin:0 auto;height:calc(var(--tabh) + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--hair);display:flex}
+  .tab{flex:1;border:none;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-family:var(--sf);font-size:10px;font-weight:500}
+  .tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .tab.active{color:var(--blue)}
+  .foot{text-align:center;font-size:12px;color:var(--muted2);margin-top:26px;line-height:1.6}
+
+  .tipcard{background:var(--card);border:.5px solid var(--hair);border-radius:var(--r);padding:15px 16px;margin-bottom:12px}
+  .tipcard h3{font-size:17px;font-weight:700;letter-spacing:-.02em;margin:0 0 9px;display:flex;align-items:center;gap:9px}
+  .tipcard li{font-size:14px;color:var(--ink2);margin-bottom:8px;list-style:none;padding-left:18px;position:relative;line-height:1.45}
+  .tipcard li:last-child{margin-bottom:0}
+  .tipcard li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--blue)}
+  .tipcard ul{margin:0;padding:0}
+  .install li{counter-increment:s;padding-left:27px}
+  .install{counter-reset:s}
+  .install li::before{content:counter(s);width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;left:0;top:1px}
+  /* edit mode + add form */
+  .ihead{display:flex;align-items:baseline;justify-content:space-between}
+  .editbtn{color:var(--blue);font-weight:600;font-size:16px;background:none;border:none;cursor:pointer;padding:4px 0}
+  .pitem{background:var(--card);border-bottom:.5px solid var(--hair)}
+  .prow{display:flex;align-items:center;gap:11px;padding:11px 14px 8px}
+  .notein{display:block;width:auto;margin:0 14px 11px 14px;font-family:var(--sf);font-size:13.5px;color:var(--ink2);background:var(--bg2);border:.5px solid var(--hair);border-radius:9px;padding:9px 11px}
+  .notein::placeholder{color:var(--muted2)}
+  .notebox{width:100%;min-height:66px;font-family:var(--sf);font-size:15px;color:var(--ink);border:none;outline:none;background:transparent;resize:vertical;line-height:1.5;padding:0}
+  .rnote{font-size:12.5px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .field textarea.txt{width:100%;font-family:var(--sf);font-size:16px;padding:12px 14px;border:.5px solid var(--hair);border-radius:12px;background:var(--card);color:var(--ink);min-height:74px;resize:vertical;line-height:1.4}
+  .field textarea.txt::placeholder{color:var(--muted2)}
+  .results{margin-top:8px;border:.5px solid var(--hair);border-radius:12px;overflow:hidden;background:var(--card)}
+  .sres{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:.5px solid var(--hair);cursor:pointer}
+  .sres:last-child{border-bottom:none}
+  .sres:active{background:var(--bg2)}
+  .sres.muted{color:var(--muted);cursor:default;font-size:13px;display:block}
+  .sres-t{flex:1;min-width:0}
+  .sres-n{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sres-s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .sres-map{flex:none;width:32px;height:32px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:16px;text-decoration:none}
+  .picknote{margin-top:8px;font-size:12.5px;color:var(--ink2);background:#EAF3FF;border-radius:9px;padding:9px 11px;line-height:1.4}
+  .handle{color:#C7C7CC;font-size:22px;line-height:1;cursor:grab;touch-action:none;flex:none;padding:0 1px}
+  .minus{width:23px;height:23px;border-radius:50%;background:#FF3B30;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;line-height:1;flex:none;cursor:pointer}
+  .minus span{margin-top:-2px}
+  .ptile{width:34px;height:34px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-size:17px}
+  .pname{flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .timein{font-family:var(--sf);font-size:14px;border:.5px solid var(--hair);border-radius:8px;padding:6px 8px;color:var(--ink);background:var(--bg2);flex:none}
+  .addrow{display:flex;align-items:center;gap:9px;padding:13px 15px;color:var(--blue);font-weight:600;font-size:15px;cursor:pointer;background:var(--card)}
+  .addrow:active{background:var(--bg2)}
+  .addplus{width:22px;height:22px;border-radius:50%;background:#E3F0FF;color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;flex:none}
+  .sortable-ghost{opacity:.35}
+  .sortable-chosen{background:var(--bg2)!important;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+  .sortable-drag{border-radius:12px}
+  .hint{font-size:12px;color:var(--muted);margin:8px 4px 0;line-height:1.4}
+
+  .field{margin:16px 18px 0}
+  .field>label{font-size:13px;color:var(--muted);font-weight:600;display:block;margin-bottom:7px}
+  .field input.txt,.field input.tin{width:100%;font-family:var(--sf);font-size:16px;padding:12px 14px;border:.5px solid var(--hair);border-radius:12px;background:var(--card);color:var(--ink)}
+  .glyphs{display:flex;gap:8px;flex-wrap:wrap}
+  .gopt{width:46px;height:46px;border-radius:12px;border:.5px solid var(--hair);background:var(--card);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .gopt.on{border-color:var(--blue);background:#EAF3FF}
+  .sugg{display:flex;gap:8px;flex-wrap:wrap}
+  .schip{border:.5px solid var(--hair);background:var(--card);border-radius:20px;padding:9px 13px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .schip:active{background:var(--bg2)}
+  .bigbtn{margin:20px 18px 4px;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:13px;font-family:var(--sf);font-size:16px;font-weight:600;width:calc(100% - 36px);cursor:pointer}
+  .bigbtn:disabled{opacity:.4}
+
+  /* ============================================================
+     LIVELY LAYER — cinematic photography, motion, atmosphere
+     ============================================================ */
+  .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0;display:block}
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* cinematic hero on Overview */
+  .phero{position:relative;border-radius:22px;overflow:hidden;margin:14px 0 8px;min-height:240px;
+    display:flex;align-items:stretch;isolation:isolate;
+    background:linear-gradient(150deg,#243056,#0a0e1c);
+    box-shadow:0 22px 48px -22px rgba(10,15,30,.7),0 2px 0 rgba(255,255,255,.04) inset}
+  .phero .ph{z-index:0;transform:scale(1.06);animation:kenburns 30s ease-in-out infinite alternate;will-change:transform}
+  @keyframes kenburns{0%{transform:scale(1.06) translate3d(0,0,0)}100%{transform:scale(1.16) translate3d(0,-2%,0)}}
+  .phero-sky{position:absolute;inset:0;z-index:1;mix-blend-mode:soft-light;opacity:.85;transition:background 1.4s ease}
+  .phero-scrim{position:absolute;inset:0;z-index:1;
+    background:linear-gradient(to top,rgba(6,9,18,.9) 2%,rgba(6,9,18,.52) 30%,rgba(6,9,18,.06) 58%,rgba(6,9,18,.34) 100%)}
+  .phero .grain{z-index:2;opacity:.07}
+  .phero-body{position:relative;z-index:3;padding:20px 22px;color:#fff;width:100%;
+    display:flex;flex-direction:column;justify-content:flex-end}
+  .phero-top{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:auto}
+  .phero-top .sep{opacity:.4}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#30D158;flex:none;
+    box-shadow:0 0 0 0 rgba(48,209,88,.6);animation:livepulse 2.6s ease-out infinite}
+  @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(48,209,88,.55)}70%{box-shadow:0 0 0 8px rgba(48,209,88,0)}100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}}
+  .phero .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-top:14px;color:rgba(255,255,255,.9)}
+  .phero .count{font-size:62px;font-weight:800;letter-spacing:-.04em;line-height:.92;margin:6px 0 0;
+    font-variant-numeric:tabular-nums;text-shadow:0 2px 26px rgba(0,0,0,.4)}
+  .phero .csmall{font-size:14px;color:rgba(255,255,255,.82);margin-top:4px;font-weight:500}
+  .phero .dtitle{font-size:31px;font-weight:800;letter-spacing:-.03em;margin:6px 0 2px;text-shadow:0 2px 22px rgba(0,0,0,.45)}
+  .phero .ddate{font-size:13.5px;color:rgba(255,255,255,.8);font-weight:500}
+  .phero .when{font-size:13.5px;color:rgba(255,255,255,.8);margin-top:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .phero .when b{color:#fff;font-weight:700}
+  .phero .go{margin-top:13px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#fff;
+    background:rgba(255,255,255,.16);border:.5px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);
+    padding:9px 15px;border-radius:11px}
+  .phero:active .go{background:rgba(255,255,255,.26)}
+
+  /* photo day chips */
+  .chips{gap:11px}
+  .chip{position:relative;flex:none;width:154px;height:100px;border-radius:16px;overflow:hidden;border:0;padding:0;
+    background:linear-gradient(150deg,#3a3a3c,#1c1c1e);box-shadow:0 8px 20px -12px rgba(0,0,0,.55);isolation:isolate}
+  .chip .ph{z-index:0;transform:scale(1.02);transition:transform .6s cubic-bezier(.22,1,.36,1)}
+  .chip:active .ph{transform:scale(1.1)}
+  .chip-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(0,0,0,.82) 6%,rgba(0,0,0,.18) 62%,rgba(0,0,0,.32) 100%)}
+  .chip-accent{position:absolute;left:0;top:0;bottom:0;width:4px;z-index:2}
+  .chip-body{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:10px 12px}
+  .chip .cd{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.9);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .chip .cn{font-size:15px;font-weight:700;letter-spacing:-.02em;margin-top:5px;line-height:1.12;color:#fff;
+    text-shadow:0 1px 8px rgba(0,0,0,.5)}
+  .chip .cc{font-size:11.5px;color:rgba(255,255,255,.82);margin-top:3px;font-weight:500}
+  .chip .cdone{margin-left:auto;color:#fff}
+
+  /* photo day banner on Plan */
+  .daybanner{position:relative;border-radius:18px;overflow:hidden;margin:28px 0 12px;min-height:120px;
+    display:flex;align-items:flex-end;isolation:isolate;background:linear-gradient(150deg,#3a3a3c,#1c1c1e);
+    box-shadow:0 12px 28px -16px rgba(0,0,0,.55)}
+  .daybanner .ph{z-index:0;transform:scale(1.05);animation:kenburns 36s ease-in-out infinite alternate}
+  .daybanner-scrim{position:absolute;inset:0;z-index:1}
+  .daybanner .grain{z-index:2;opacity:.06}
+  .daybanner-body{position:relative;z-index:3;padding:15px 16px;color:#fff;width:100%;display:flex;align-items:center;gap:13px}
+  .daybanner .dnum{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:17px;flex:none;color:#fff;background:rgba(255,255,255,.18);
+    border:.5px solid rgba(255,255,255,.3);backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,.25)}
+  .daybanner .db-t{font-size:21px;font-weight:800;letter-spacing:-.03em;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+  .daybanner .db-d{font-size:12.5px;color:rgba(255,255,255,.85);font-weight:500;margin-top:1px}
+  .daybanner .db-r{margin-left:auto;font-size:11.5px;color:rgba(255,255,255,.92);text-align:right;line-height:1.3;font-weight:600;
+    background:rgba(0,0,0,.28);padding:5px 9px;border-radius:9px;backdrop-filter:blur(6px)}
+
+  /* slim guide header */
+  .guidehero{position:relative;border-radius:18px;overflow:hidden;margin:12px 0 18px;min-height:128px;display:flex;align-items:flex-end;
+    isolation:isolate;background:linear-gradient(150deg,#243056,#0a0e1c);box-shadow:0 12px 28px -16px rgba(0,0,0,.5)}
+  .guidehero .ph{z-index:0;transform:scale(1.06);animation:kenburns 34s ease-in-out infinite alternate}
+  .guidehero-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(6,9,18,.86),rgba(6,9,18,.1) 60%,rgba(6,9,18,.3))}
+  .guidehero .grain{z-index:2}
+  .guidehero-body{position:relative;z-index:3;padding:16px 18px;color:#fff}
+  .guidehero h1{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:0;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+  .guidehero p{font-size:14px;color:rgba(255,255,255,.85);margin:3px 0 0}
+
+  /* cinematic detail-sheet hero (picture behind the title) */
+  .shero{position:relative;height:218px;overflow:hidden;isolation:isolate;display:flex;align-items:flex-end;
+    background:linear-gradient(150deg,#3a3a3c,#1c1c1e)}
+  .shero .ph{z-index:0;transform:scale(1.04);animation:kenburns 32s ease-in-out infinite alternate}
+  .shero-scrim{position:absolute;inset:0;z-index:1}
+  .shero .grain{z-index:2;opacity:.07}
+  .shero-glyph{position:absolute;top:14px;left:16px;z-index:3;width:44px;height:44px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;font-size:23px;background:rgba(255,255,255,.92);
+    box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .shero-body{position:relative;z-index:3;padding:16px 18px;color:#fff;width:100%}
+  .shero-eye{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.92)}
+  .shero-title{font-size:27px;font-weight:800;letter-spacing:-.03em;margin:3px 0 2px;line-height:1.04;text-shadow:0 2px 18px rgba(0,0,0,.5)}
+  .shero-addr{font-size:13px;color:rgba(255,255,255,.85);font-weight:500}
+  .smap-card{border-radius:var(--r);overflow:hidden;border:.5px solid var(--hair);height:158px;position:relative}
+  .smap-card #sheetMap{position:absolute;inset:0}
+
+  /* gentle entrance reveal (Overview, first load) */
+  .reveal>*{opacity:0;transform:translateY(14px);animation:rise .62s cubic-bezier(.22,1,.36,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .reveal>*:nth-child(1){animation-delay:.02s}.reveal>*:nth-child(2){animation-delay:.08s}
+  .reveal>*:nth-child(3){animation-delay:.14s}.reveal>*:nth-child(4){animation-delay:.2s}
+  .reveal>*:nth-child(5){animation-delay:.26s}.reveal>*:nth-child(6){animation-delay:.32s}
+  .reveal>*:nth-child(7){animation-delay:.38s}.reveal>*:nth-child(8){animation-delay:.44s}
+  .reveal>*:nth-child(n+9){animation-delay:.5s}
+
+  .row,.chip,.stat,.tipcard{transition:transform .12s ease}
+  .row:active,.stat:active{transform:scale(.985)}
+
+  @media (prefers-reduced-motion:reduce){
+    .phero .ph,.daybanner .ph,.shero .ph,.guidehero .ph,.chip .ph{animation:none!important;transform:none!important}
+    .live-dot{animation:none!important}
+    .reveal>*{opacity:1!important;transform:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <div class="nav-sm"><span id="navLeft">New York City</span><span class="pill" id="navRight">Jun 16–21</span></div>
+  </div>
+
+  <section class="view active" id="view-dashboard"><div class="pad" id="dashPad"></div></section>
+  <section class="view" id="view-itinerary"><div class="pad" id="itinPad"></div></section>
+  <section class="view" id="view-map">
+    <div class="segwrap"><div class="seg" id="dayseg"></div></div>
+    <div id="mapFull"></div>
+  </section>
+  <section class="view" id="view-tips"><div class="pad" id="tipsPad"></div></section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="dashboard">
+    <svg viewBox="0 0 24 24"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 8h6V4h-6zM4 20h6v-4H4z" stroke-linejoin="round"/></svg>Overview</button>
+  <button class="tab" data-tab="itinerary">
+    <svg viewBox="0 0 24 24"><circle cx="6" cy="7" r="1.8"/><circle cx="6" cy="17" r="1.8"/><path d="M11 7h9M11 17h9M11 12h6"/></svg>Plan</button>
+  <button class="tab" data-tab="map">
+    <svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke-linejoin="round"/><path d="M9 4v14M15 6v14"/></svg>Map</button>
+  <button class="tab" data-tab="tips">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Guide</button>
+</nav>
+
+<script>
+/* ===== DATA ===== */
+const TRIP={arrival:"2026-06-16T23:00:00",depart:"2026-06-21T11:00:00"};
+const lineColor={"1":"#EE352E","2":"#EE352E","3":"#EE352E","4":"#00933C","5":"#00933C","6":"#00933C","7":"#B933AD",
+"A":"#0039A6","C":"#0039A6","E":"#0039A6","B":"#FF6319","D":"#FF6319","F":"#FF6319","M":"#FF6319",
+"N":"#FCCC0A","Q":"#FCCC0A","R":"#FCCC0A","W":"#FCCC0A","G":"#6CBE45","J":"#996633","Z":"#996633","L":"#A7A9AC","S":"#808183"};
+const blkText=new Set(["N","Q","R","W"]);
+
+const DAYS=[
+ {n:1,date:"Wednesday, Jun 17",dateISO:"2026-06-17",title:"Greenwich Village",hex:"#E8720C",tag:"Village &<br>West Village",stops:["joes","wsp","nyu","magnolia"]},
+ {n:2,date:"Thursday, Jun 18",dateISO:"2026-06-18",title:"Downtown & Brooklyn",hex:"#1FA64A",tag:"Wall St &<br>Brooklyn Bridge",stops:["bull","wallst","bridge","dumbo"]},
+ {n:3,date:"Friday, Jun 19",dateISO:"2026-06-19",title:"Midtown",hex:"#D69A00",tag:"Times Sq &<br>Central Park S",stops:["liberty","times","halal","cpsouth"]},
+ {n:4,date:"Saturday, Jun 20",dateISO:"2026-06-20",title:"Uptown",hex:"#E5443B",tag:"Central Park &<br>Columbia",stops:["levain","cpheart","columbia"]},
+];
+
+/* Real, free-to-use photography (Unsplash). Each layer falls back to a
+   day-coloured gradient if a photo can't load — so it always looks right,
+   even on patchy data abroad. */
+const PHOTO={
+  hero:"1573679250094-a66dd1fa32a3",   /* Manhattan skyline, golden dusk */
+  1:"1454692173233-f4f34c12adad",       /* Greenwich/West Village street  */
+  2:"1751510288463-1a3be4f0e6a0",       /* Brooklyn Bridge + skyline      */
+  3:"1503179579247-e6946936f17b",       /* Times Square at night          */
+  4:"1568515387631-8b650bbcdb90",       /* Central Park + Uptown skyline  */
+};
+function imgURL(id,w){return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w||1100}&q=72`;}
+function dayPhoto(n,w){return imgURL(PHOTO[n]||PHOTO.hero,w);}
+/* an <img> layer that simply removes itself on error, revealing the gradient */
+function phLayer(url){return `<img class="ph" src="${url}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">`;}
+/* turn a hex + alpha into rgba-ish 8-digit hex for inline gradients */
+function hx(hex,aa){return hex+aa;}
+
+const S={
+ joes:{name:"Joe's Pizza",type:"Pizza",glyph:"🍕",time:"12:30 PM",addr:"7 Carmine St, Greenwich Village",lat:40.7306597,lng:-74.0021707,q:"Joe's Pizza 7 Carmine St New York",
+  blurb:"The quintessential NY slice since 1975",
+  subway:[["A C E B D F M","W 4 St–Wash Sq · 3 min walk"],["1","Houston St"]],
+  know:"A Greenwich Village institution opened in 1975 by Joe Pozzuoli, from Naples. It's a tiny stand-and-go slice joint — no frills, no seats, just a paper plate and the best plain slice in the city. Fresh pies come out every few minutes; lines look long but move fast.",
+  order:[["★","Plain cheese slice","the masterpiece, ~$4–5. Fold it lengthwise and eat it walking."],["★","Fresh mozzarella slice","slightly less greasy — order one of each."],["–","Skip","funky toppings; this is a purist's place."]],
+  pay:"Cash is king. The original Carmine St counter strongly prefers cash and is often cash-only — there's an ATM right outside if needed.",
+  tips:["Ask for a fresh slice straight from a new pie rather than a reheated one.","No tables — eat at the counter ledge or carry it to Washington Square, 2 blocks away.","Mid-afternoon is calmest; lunch and post-bar 2 AM are the rushes."],
+  near:[["🌳","Father Demo Square","Tiny triangle park out front — good spot to eat your slice."],["🧀","Murray's Cheese","Bleecker St institution, 2 min away."]]},
+
+ wsp:{name:"Washington Square Park",type:"Park",glyph:"🏛️",time:"1:15 PM",addr:"Washington Square, Greenwich Village",lat:40.7308838,lng:-73.997332,q:"Washington Square Park New York",
+  blurb:"The arch, the fountain, chess and street music",
+  subway:[["A C E B D F M","W 4 St–Wash Sq"],["R W","8 St–NYU"]],
+  story:"The marble arch (1892, by Stanford White) marks the centennial of George Washington's inauguration. But the park has a darker past: it sits on a former potter's field where an estimated 20,000 people were buried, many during yellow-fever epidemics — bodies still rest beneath the lawns. The northwest corner holds the 'Hangman's Elm,' Manhattan's oldest tree at roughly 330 years; legend says public executions happened beneath it, though historians mostly treat that as myth. By the 1960s the fountain became the cradle of the Greenwich Village folk scene — a young Bob Dylan played here.",
+  tips:["Southwest corner = the famous open-air chess tables. Watch, or take on a hustler if you're quick.","Musicians often play inside the dry fountain basin in the late afternoon.","Stand under the arch and line up the view straight up Fifth Avenue."],
+  near:[["🏳️‍🌈","Stonewall Inn","6 min walk — landmark of LGBTQ+ history."],["🎤","Comedy Cellar","Legendary basement club on MacDougal; surprise drop-ins."],["🧆","Mamoun's Falafel","Cheap, iconic late-night falafel on MacDougal."]]},
+
+ nyu:{name:"New York University",type:"Campus",glyph:"🎓",time:"2:00 PM",addr:"Around Washington Square",lat:40.7292,lng:-73.9967,q:"New York University Washington Square",
+  blurb:"A campus with no walls — the city is the quad",
+  subway:[["R W","8 St–NYU"],["A C E B D F M","W 4 St–Wash Sq"]],
+  know:"NYU famously has no traditional campus — its buildings (marked by purple flags) are woven straight into Greenwich Village, with Washington Square Park serving as the de-facto quad. Bobst Library's looming red sandstone facade sits on the south side of the park. As a fellow university student, it's a fun contrast to OU's contained campus: here the city itself is the classroom.",
+  tips:["Look for the purple banners to tell NYU buildings apart from the rest of the Village.","Peek at the Bobst Library atrium from outside — a striking, slightly infamous interior.","Keep walking south and the blocks bleed into SoHo's cast-iron district."],
+  near:[["🛍️","SoHo","Cast-iron architecture + flagship shopping, just south."],["🧊","Astor Place Cube","Spin the balanced steel cube, 10 min east."]]},
+
+ magnolia:{name:"Magnolia Bakery",type:"Bakery",glyph:"🧁",time:"3:15 PM",addr:"401 Bleecker St, West Village",lat:40.7358946,lng:-74.004910,q:"Magnolia Bakery 401 Bleecker St New York",
+  blurb:"Red velvet cupcakes — and the famous banana pudding",
+  subway:[["1","Christopher St–Sheridan Sq"],["A C E B D F M","W 4 St–Wash Sq"]],
+  know:"The original Magnolia opened in 1996 on the cobblestoned corner of Bleecker & W 11th. It's a tiny corner shop — about the size of a deli with one table — that got launched into worldwide fame by a single cameo in Sex and the City. You came for the red velvet cupcake, and it delivers: crimson, lightly chocolatey, under a swirl of whipped vanilla icing.",
+  order:[["★","Red velvet cupcake","the one you planned for — whipped vanilla icing, a Magnolia original."],["★","Classic banana pudding","the true icon: vanilla wafers, fresh banana, creamy pudding. Get it even if you only planned cupcakes."],["○","Buttercream cupcakes","pastel swirls, very photogenic."]],
+  pay:"Cards & Apple Pay accepted.",
+  tips:["The West Village original is prettier and more atmospheric than the Midtown branch.","Banana pudding travels well in its cup — grab one for later in the park.","The surrounding Bleecker / Perry / W 11th blocks are the most cinematic streets in the city; leave time to wander."],
+  near:[["📺","Friends building","90 Bedford St — the exterior from the show, 5 min away."],["🌿","Bleecker Street","Boutiques, brownstones and tree-lined photo streets."]]},
+
+ bull:{name:"Charging Bull",type:"Landmark",glyph:"🐂",time:"10:00 AM",addr:"Bowling Green, Financial District",lat:40.7055746,lng:-74.0134499,q:"Charging Bull Bowling Green New York",
+  blurb:"3.5 tons of guerrilla art — and a very polished nose",
+  subway:[["4 5","Bowling Green"],["R W","Whitehall St"]],
+  story:"Sculptor Arturo Di Modica cast this 3,200-kg bronze bull himself and, in December 1989 — just after the 1987 crash — illegally dropped it outside the New York Stock Exchange in the dead of night as a guerrilla gift to the city, a symbol of 'the strength and power of the American people.' The city impounded it; public outcry forced them to reinstall it at Bowling Green, where it's been ever since. Tourists rub its nose, horns — and famously its testicles — for financial luck, leaving those spots polished gold. The 'Fearless Girl' statue once stared it down here before being moved near the NYSE.",
+  tips:["Arrive before ~9:30 AM or the line to photograph the front gets brutal.","Economist's bonus: you're standing where bull-vs-bear imagery literally lives.","Walk 2 min to the Staten Island Ferry — free, and it passes the Statue of Liberty."],
+  near:[["⛴️","Staten Island Ferry","FREE 25-min ride with Statue of Liberty + skyline views."],["🌊","Battery Park","Waterfront green space at the harbor's edge."]]},
+
+ wallst:{name:"Wall Street",type:"Landmark",glyph:"📈",time:"10:45 AM",addr:"11 Wall St, Financial District",lat:40.706877,lng:-74.0112654,q:"New York Stock Exchange Wall Street",
+  blurb:"A 1653 defensive wall became the center of finance",
+  subway:[["2 3","Wall St"],["4 5","Wall St"],["J Z","Broad St"]],
+  story:"The name is literal: in 1653 the Dutch of New Amsterdam built a wooden palisade along this line to defend against the British and Native Americans. The wall came down; the street stayed. The New York Stock Exchange traces to the 1792 Buttonwood Agreement, signed by 24 brokers under a buttonwood tree right here. Across the street, Federal Hall marks where George Washington was sworn in as the first U.S. President in 1789 — the nation's first capitol. A block away, in the Trinity Church graveyard, lies Alexander Hamilton, the first Treasury Secretary who arguably built American finance.",
+  tips:["You can't enter the NYSE, but the columned facade with the giant flag is the classic shot.","Stand on the Federal Hall steps under the Washington statue — free and usually uncrowded.","For a double-degree econ student, Hamilton's grave at Trinity Church is a real pilgrimage."],
+  near:[["🏛️","Federal Hall","Free memorial; Washington's inauguration site."],["⛪","Trinity Church","Hamilton's grave + a quiet historic graveyard."],["🍽️","Stone Street","Cobblestoned alley of bars & restaurants — great lunch."]]},
+
+ bridge:{name:"Brooklyn Bridge",type:"Landmark",glyph:"🌉",time:"12:30 PM",addr:"Manhattan entrance near City Hall",lat:40.7060855,lng:-73.9968643,q:"Brooklyn Bridge pedestrian walkway New York",
+  blurb:"Walk Manhattan → Brooklyn with the skyline behind you",
+  subway:[["4 5 6","Brooklyn Bridge–City Hall"],["J Z","Chambers St"]],
+  story:"Opened in 1883, the Brooklyn Bridge was the longest suspension bridge in the world and the first to use steel cables. Its construction is a family saga: designer John Roebling died of tetanus before it began; his son Washington Roebling took over but was crippled by decompression sickness ('the bends') from the underwater caissons; so his wife Emily Roebling effectively ran the 14-year project, learning the engineering herself, and was the first to cross. Six days after opening, a rumor that the bridge was collapsing caused a stampede that killed twelve people. To prove it was safe, showman P.T. Barnum marched 21 elephants across it in 1884.",
+  tips:["Walk Manhattan → Brooklyn so the skyline is behind you, opening into DUMBO — the better direction for photos.","Stay in the pedestrian lane, not the bike lane.","Go late afternoon: a ~30–40 min walk lands you in DUMBO near golden hour.","The elevated wood promenade lets you see the cable geometry up close — an engineer's treat."],
+  near:[["📷","DUMBO","Where the walk lands you — see next stop."],["⛲","City Hall Park","Pretty fountain & park at the Manhattan foot."]]},
+
+ dumbo:{name:"DUMBO, Brooklyn",type:"Neighborhood",glyph:"📷",time:"2:00 PM",addr:"Washington St at Water St, Brooklyn",lat:40.7026227,lng:-73.9896198,q:"Washington Street DUMBO Brooklyn Manhattan Bridge view",
+  blurb:"The Manhattan-Bridge framed photo, carousel & waterfront",
+  subway:[["F","York St (to return)"],["A C","High St (to return)"]],
+  know:"DUMBO (Down Under the Manhattan Bridge Overpass) is a former industrial district turned cobblestoned waterfront neighborhood. The money shot is on Washington Street, where the Manhattan Bridge frames perfectly between two brick buildings — one of the most photographed spots in NYC. Brooklyn Bridge Park along the water has the best skyline views in the city.",
+  tips:["Washington St at Water St is THE photo — go a bit before sunset for light on the buildings.","Jane's Carousel: a restored 1922 carousel in a glass pavilion by the water.","Time Out Market Brooklyn = food hall with a rooftop skyline view.","Return to Manhattan on the F (York St) or A/C (High St), or walk back over the bridge at night."],
+  near:[["🌆","Brooklyn Bridge Park","The best Manhattan skyline view anywhere."],["🎠","Jane's Carousel","Vintage carousel in a glass box on the water."],["🍴","Time Out Market","Rooftop food hall with skyline views."]]},
+
+ liberty:{name:"Liberty Bagels",type:"Bagels",glyph:"🥯",time:"9:00 AM",addr:"260 W 35th St, Midtown",lat:40.7524936,lng:-73.9925297,q:"Liberty Bagels Midtown 260 W 35th St New York",
+  blurb:"Home of the Rainbow Bagel — fuel up before Midtown",
+  subway:[["1 2 3 A C E","34 St–Penn Station"],["B D F M N Q R W","34 St–Herald Sq"]],
+  know:"A Midtown bagel shop near Penn Station that's become a phenomenon as the 'home of the Rainbow Bagel.' Bagels are baked fresh daily, come huge, and get loaded from a wall of ~25 cream-cheese flavors displayed like gelato. The line forms outside but moves fast — a gentleman usually manages the flow.",
+  order:[["★","Rainbow bagel","the famous one: vanilla-sweet, swirled colors. Pair with strawberry or birthday-cake cream cheese."],["★","Everything bagel + scallion cream cheese","the locals' pick — voted among the city's best."],["○","Bacon/sausage egg & cheese","classic NYC breakfast, done well."]],
+  pay:"Cards & Apple Pay accepted. Order at the counter inside; pickups come to the door.",
+  tips:["Know your order before you reach the front — it's loud and fast.","Bagels are soft enough to skip toasting; they're generous with cream cheese (ask for less if needed).","Grab it to go and eat walking toward Times Square, 8 min north."],
+  near:[["🛍️","Herald Sq / Macy's","Flagship department store, 2 min east."],["🚉","Moynihan Train Hall","Stunning glass-roofed hall in the old post office."]]},
+
+ times:{name:"Times Square",type:"Landmark",glyph:"🌃",time:"10:00 AM",addr:"42nd St & Broadway, Midtown",lat:40.7579747,lng:-73.9855426,q:"Times Square New York",
+  blurb:"The Crossroads of the World — sensory overload",
+  subway:[["1 2 3 7 N Q R W S","Times Sq–42 St"],["A C E","42 St–Port Authority"]],
+  story:"Once called Longacre Square, it was renamed in 1904 when The New York Times moved its headquarters into the new Times Building — and to celebrate, the paper hosted a New Year's Eve party. The first illuminated ball dropped on Dec 31, 1907, starting the tradition watched worldwide. Today's blinding LED billboards aren't optional: zoning law actually *requires* signage to maintain a minimum brightness, making it the only place in the U.S. where you're legally obligated to advertise loudly.",
+  tips:["Go once for the spectacle, ideally after dark when the lights peak — then move on; locals don't linger.","The red glass TKTS steps above the booth are a great elevated photo spot.","Costumed characters & the 'Naked Cowboy' will demand tips for photos — agree on a price first or keep walking, and watch your pockets.","Don't eat here — walk a few blocks in any direction for far better food."],
+  near:[["🌳","Bryant Park","Calm green oasis 3 blocks east — totally different energy."],["🎭","Broadway","You're in the heart of the Theater District."]]},
+
+ halal:{name:"The Halal Guys",type:"Street food",glyph:"🥙",time:"12:30 PM",addr:"SW corner, W 53rd St & 6th Ave",lat:40.7617724,lng:-73.9793516,q:"The Halal Guys 53rd and 6th New York",
+  blurb:"NYC's most iconic street cart — chicken over rice",
+  subway:[["B D F M","47–50 Sts–Rockefeller Ctr"],["F","57 St"],["B D E","7 Av"]],
+  know:"The original cart that defined NYC street food. Three Egyptian founders started it as a hot-dog cart in 1990, then switched to halal chicken & gyro platters to feed Muslim cab drivers — and accidentally built a global empire. The yellow-and-red cart on the SW corner of 53rd & 6th is the OG, near MoMA. (This is the street-cart experience you were after — the city is full of dirty-water hot-dog carts and taco trucks too, but this is *the* one to make a destination.)",
+  order:[["★","Chicken (or gyro) over rice","the combo platter — the dish that built the legend. Huge; can be 2 meals."],["★","White sauce","the star — creamy, tangy; get it on everything."],["⚠","Red sauce","DANGEROUSLY spicy. Ask for a little, or on the side, the first time."]],
+  pay:"Cards accepted, but cash is faster when the line is long. Open absurdly late (≈4–5 AM).",
+  tips:["No seating — eat standing or carry it to a bench on 6th Ave or into Central Park, 10 min north.","Have your order ready before you reach the front; the line moves fast.","Make sure they hand you the white sauce — and go easy on red until you've tasted it."],
+  near:[["🖼️","MoMA","Museum of Modern Art — one block away (Starry Night)."],["🏙️","Rockefeller Center","5 min south — Top of the Rock has the best skyline view."]]},
+
+ levain:{name:"Levain Bakery",type:"Bakery",glyph:"🍪",time:"9:30 AM",addr:"167 W 74th St, Upper West Side",lat:40.7799589,lng:-73.9802984,q:"Levain Bakery 167 W 74th St New York",
+  blurb:"The original — a half-pound cookie, crisp outside, molten center",
+  subway:[["1 2 3","72 St · 1 block"],["B C","72 St"]],
+  know:"This 74th St storefront is where it all began in 1995 — two friends trying to bake 'the world's greatest chocolate chip cookie.' The result is a legendary 6-ounce (½ lb) cookie: thick as a hockey puck, crisp-edged, with a deliberately under-baked gooey core. Open 8 AM–8 PM daily; it's tiny, so expect a short line that moves quickly.",
+  order:[["★","Chocolate Chip Walnut","the original signature 6-oz cookie."],["★","Dark Chocolate Peanut Butter Chip","many regulars' favorite."],["○","Two-Chip Chocolate Chip","walnut-free, double chocolate."]],
+  pay:"Cards (Visa / Mastercard / Amex) & cash both fine.",
+  tips:["Eat it warm and immediately — the gooey center is the whole point.","One cookie is genuinely a meal — share, or save half for the park.","You're one block from the 72nd St park entrance — carry your cookie straight in."],
+  near:[["🌳","Central Park (72nd St)","Strawberry Fields entrance is right here."],["🦖","Natural History Museum","10 min walk; the museum from the movies."]]},
+
+ cpsouth:{name:"Central Park — South",type:"Park",glyph:"🌳",time:"2:00 PM",addr:"59th St entrances",lat:40.7672,lng:-73.9748,q:"Central Park The Mall Literary Walk New York",
+  blurb:"Enter the southern gates and walk the Mall",
+  subway:[["N R W","5 Av/59 St"],["A B C D 1","59 St–Columbus Circle"],["F","57 St"]],
+  know:"The south end is the busy, postcard corner of the park — and an easy stroll from your Midtown lunch. From here you can walk The Mall (the cathedral-like, elm-lined promenade) toward Bethesda Terrace. Tomorrow's plan picks the park up again from the west, so today just sample the southern half.",
+  tips:["Walk up The Mall & Literary Walk — the elm canopy is the most-filmed path in the park.","Wollman Rink & The Pond sit just inside the SE corner (59th & 5th).","Skip the pedicabs unless you settle the (high) price up front — walking is better anyway."],
+  near:[["🏙️","Top of the Rock","Best skyline view, with the Empire State Building in frame."],["🚂","Grand Central","Cathedral-like concourse + whispering gallery, 10 min away."],["🛍️","Fifth Avenue","Flagship-store corridor runs south from the park."]]},
+
+ cpheart:{name:"Central Park — The Heart",type:"Park",glyph:"⛲",time:"10:30 AM",addr:"Mid-park, 72nd–79th St",lat:40.7739528,lng:-73.9709657,q:"Bethesda Terrace Central Park New York",
+  blurb:"Strawberry Fields, Bethesda Terrace, Bow Bridge",
+  subway:[["B C","72 St"],["B C","81 St–Museum of Natural History"]],
+  story:"Central Park (1858) is entirely man-made — Frederick Law Olmsted & Calvert Vaux's 'Greensward Plan' sculpted 843 acres of swamp and rock into what looks like untouched nature. Enter at 72nd St to Strawberry Fields, the teardrop garden memorializing John Lennon, with its 'Imagine' mosaic — directly across from the Dakota building where he was killed in 1980. Walk east to Bethesda Terrace and the Angel of the Waters fountain, the park's grand heart. Just northwest, the cast-iron Bow Bridge is the city's most romantic span — and a favorite movie proposal spot.",
+  tips:["Route: Strawberry Fields → Bethesda Terrace → Bow Bridge → up toward the Reservoir, then exit to Columbia.","The arcade beneath Bethesda Terrace has stunning tiled ceilings and often live musicians.","From here it's a scenic walk, or one stop on the 1 (72→116), up to Columbia.","The best of the park is free and on foot — rent nothing."],
+  near:[["🏰","The Dakota","Gothic building across from Strawberry Fields (Lennon's home)."],["🦉","Belvedere Castle","Victorian folly with a great mid-park overlook."],["🖼️","The Met","On the park's east edge at 82nd — world-class museum."]]},
+
+ columbia:{name:"Columbia University",type:"Campus",glyph:"📚",time:"1:00 PM",addr:"116th St & Broadway, Morningside Heights",lat:40.8075355,lng:-73.9625727,q:"Columbia University Low Library 116th New York",
+  blurb:"An Ivy League quad with a hidden owl and grand steps",
+  subway:[["1","116 St–Columbia University · at the gate"]],
+  know:"Founded in 1754 as King's College under a charter from King George II, Columbia is the oldest university in New York and a member of the Ivy League. Unlike NYU's open campus, Columbia has a classic enclosed quad: Low Memorial Library's domed steps, the bronze 'Alma Mater' statue, and the columned Butler Library facing it. For a researcher and double-degree student, it's an inspiring contrast to Morningside's grit just outside the gates.",
+  story:"Campus legend: a small owl is hidden in the folds of the Alma Mater statue's robe. Lore says the first freshman to find it becomes valedictorian — or, in another telling, will marry a Columbian. Generations of students have squinted at the bronze hunting for it (look near her left foot).",
+  tips:["Sit on the Low Library steps facing Butler — the classic Columbia view and a great rest.","Hunt for the hidden owl on the Alma Mater statue.","Walk 5 min to the Cathedral of St. John the Divine — the largest Gothic cathedral in the world, still unfinished."],
+  near:[["⛪","St. John the Divine","Colossal unfinished Gothic cathedral, 5 min south."],["🌅","Riverside Park","Quiet Hudson-side park west of campus."],["☕","Tom's Restaurant","The diner facade from Seinfeld, at 112th & Broadway."]]},
+};
+
+/* ===== HELPERS ===== */
+function bullets(str){return str.split(" ").map(l=>{const c=lineColor[l]||"#777";const b=blkText.has(l)?" blk":"";return `<span class="mb${b}" style="background:${c}">${l}</span>`;}).join("");}
+const gmapsDir=q=>`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
+const gphotos=q=>`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(q)}`;
+function tileBG(hex){return `linear-gradient(135deg, ${hex}22, ${hex}0d)`;}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function to24(s){const m=String(s).match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);if(!m)return"12:00";let h=+m[1];const ap=(m[3]||"").toUpperCase();if(ap==="PM"&&h<12)h+=12;if(ap==="AM"&&h===12)h=0;return String(h).padStart(2,"0")+":"+m[2];}
+function fmt(t){const p=String(t).split(":");let H=+p[0];const M=p[1]||"00";const ap=H>=12?"PM":"AM";let h=H%12;if(h===0)h=12;return h+":"+M+" "+ap;}
+
+/* ===== ATMOSPHERE / MOTION ===== */
+const REDUCED=window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+function nyParts(){
+  /* current wall-clock time in New York, wherever the traveller is */
+  const s=new Date().toLocaleString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit",hour12:true});
+  const h=+new Date().toLocaleString("en-US",{timeZone:"America/New_York",hour:"numeric",hour12:false});
+  return {label:s,hour:(h===24?0:h)};
+}
+function skyFor(hour){
+  if(hour>=5&&hour<8)  return {g:"linear-gradient(160deg,#ffb27a,#7c8ed1)",part:"Dawn"};        /* sunrise   */
+  if(hour>=8&&hour<16) return {g:"linear-gradient(160deg,#86c7ff,#cfe6ff)",part:"Daytime"};      /* clear day */
+  if(hour>=16&&hour<20)return {g:"linear-gradient(160deg,#ff7e5f,#ff5e8a)",part:"Golden hour"};  /* sunset    */
+  return {g:"linear-gradient(160deg,#2a3a76,#0a1026)",part:"Night"};                              /* night     */
+}
+function tickClock(){
+  const els=document.querySelectorAll("[data-nyclock]");if(!els.length)return;
+  const t=nyParts();els.forEach(e=>e.textContent=t.label);
+  const sky=document.getElementById("pheroSky");if(sky)sky.style.background=skyFor(t.hour).g;
+  const pt=document.querySelector("[data-nypart]");if(pt)pt.textContent=skyFor(t.hour).part;
+}
+let clockTimer=null;
+function startClock(){tickClock();if(clockTimer)clearInterval(clockTimer);clockTimer=setInterval(tickClock,1000*20);}
+function countUp(el,to,dur){
+  if(!el)return; to=+to||0;
+  if(REDUCED||to===0){el.textContent=to;return;}
+  const start=performance.now();
+  function step(now){const p=Math.min(1,(now-start)/dur);const e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(e*to);if(p<1)requestAnimationFrame(step);}
+  requestAnimationFrame(step);
+}
+/* subtle parallax: drift the hero photo as the page scrolls */
+function bindParallax(){
+  if(REDUCED)return;
+  const onScroll=()=>{const img=document.querySelector("#phero .ph");if(!img)return;
+    const y=Math.min(window.scrollY,260);img.style.translate="0 "+(y*0.18)+"px";};
+  window.removeEventListener("scroll",window.__plx);window.__plx=onScroll;
+  window.addEventListener("scroll",onScroll,{passive:true});onScroll();
+}
+
+/* ===== STATE ===== */
+let visited=new Set();
+try{const r=localStorage.getItem("nyc26_visited");if(r)visited=new Set(JSON.parse(r));}catch(e){}
+function saveVisited(){try{localStorage.setItem("nyc26_visited",JSON.stringify([...visited]));}catch(e){}}
+
+let plan;
+function defaultPlan(){const p={};DAYS.forEach(d=>{p[d.n]=d.stops.map(id=>({id,time:to24(S[id].time)}));});return p;}
+try{const r=localStorage.getItem("nyc26_plan");const o=r?JSON.parse(r):null;
+  plan=(o&&DAYS.every(d=>Array.isArray(o[d.n])))?o:defaultPlan();}catch(e){plan=defaultPlan();}
+function savePlan(){try{localStorage.setItem("nyc26_plan",JSON.stringify(plan));}catch(e){}}
+
+const dayObj=n=>DAYS.find(d=>d.n===n);
+function findItem(id){for(const d of DAYS){const it=plan[d.n].find(x=>x.id===id);if(it)return{it,dayN:d.n};}return null;}
+function dataOf(it){return it.custom?it:S[it.id];}
+function planFlat(){const a=[];DAYS.forEach(d=>plan[d.n].forEach(it=>a.push({...it,dayN:d.n})));return a;}
+function rdLine(data){return (data.type||"Place")+(data.blurb?(" · "+data.blurb):"");}
+
+/* ===== OVERVIEW ===== */
+function getFocus(){
+  const now=new Date(),arr=new Date(TRIP.arrival),dep=new Date(TRIP.depart);
+  if(now<arr)return{mode:"count"};
+  if(now>=dep)return{mode:"over"};
+  const t=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  for(const d of DAYS){if(new Date(d.dateISO+"T00:00:00").getTime()===t)return{mode:"day",day:d,label:"Today"};}
+  for(const d of DAYS){if(new Date(d.dateISO+"T00:00:00").getTime()>t)return{mode:"day",day:d,label:"Tomorrow"};}
+  return{mode:"over"};
+}
+function renderDash(){
+  const now=new Date(),arr=new Date(TRIP.arrival);
+  const total=planFlat().length,done=planFlat().filter(x=>visited.has(x.id)).length,pct=total?Math.round(done/total*100):0;
+  const f=getFocus();
+  let hero="",focusList="",upnext="";
+  const sky=skyFor(nyParts().hour);
+  const liveRow=`<div class="phero-top"><span class="live-dot"></span>New York <span class="sep">·</span> <span data-nyclock>—</span> <span class="sep">·</span> <span data-nypart>${sky.part}</span></div>`;
+  const skyLayer=`<div class="phero-sky" id="pheroSky" style="background:${sky.g}"></div><div class="phero-scrim"></div><div class="grain"></div>`;
+
+  if(f.mode==="count"){
+    const ms=arr-now,d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5);
+    const big=d>0?d:h,unit=d>0?(d===1?"day until you land":"days until you land"):"hours until you land";
+    hero=`<div class="phero" id="phero">${phLayer(dayPhoto('hero',1280))}${skyLayer}
+      <div class="phero-body">${liveRow}
+        <div class="k">Countdown</div>
+        <div class="count"><span id="bigCount">0</span></div>
+        <div class="csmall">${unit}</div>
+        <div class="when"><b>Tue Jun 16</b> arrive 11 PM <span class="sep">→</span> <b>Sun Jun 21</b> depart 11 AM</div>
+      </div></div>`;
+    window.__count=big;
+    const fu=planFlat().find(x=>!visited.has(x.id));
+    if(fu){const data=dataOf(fu),d2=dayObj(fu.dayN);
+      upnext=`<div class="glabel">First up</div><div class="group"><div class="row" onclick="openSheet('${fu.id}')">
+        <div class="tile" style="background:${tileBG(d2.hex)}">${data.glyph||"⭐"}</div>
+        <div class="rt"><div class="rn">${data.name}</div><div class="rd">Day ${d2.n} · ${fmt(fu.time)} · ${data.blurb||""}</div></div>
+        <div class="chev">›</div></div></div>`;}
+  } else if(f.mode==="day"){
+    const d=f.day;
+    hero=`<div class="phero" id="phero" onclick="goDay(${d.n})" style="cursor:pointer">${phLayer(dayPhoto(d.n,1280))}${skyLayer}
+      <div class="phero-body">${liveRow}
+        <div class="k">${f.label} <span class="sep">·</span> Day ${d.n}</div>
+        <div class="dtitle">${d.title}</div>
+        <div class="ddate">${d.date}</div>
+        <span class="go">${plan[d.n].length} stop${plan[d.n].length===1?"":"s"} planned →</span>
+      </div></div>`;
+    focusList=`<div class="glabel">${f.label}’s highlights</div><div class="group">`+
+      (plan[d.n].length?plan[d.n].map(it=>{const data=dataOf(it);return `<div class="row" onclick="openSheet('${it.id}')">
+        <div class="tile" style="background:${tileBG(d.hex)}">${data.glyph||"⭐"}</div>
+        <div class="rt"><div class="rn">${data.name}</div><div class="rd">${rdLine(data)}</div></div>
+        <div class="rtime">${fmt(it.time)}</div><div class="chev">›</div></div>`;}).join("")
+      :`<div class="row" style="color:var(--muted)">No stops planned — add some in the Plan tab.</div>`)+`</div>`;
+  } else {
+    hero=`<div class="phero" id="phero">${phLayer(dayPhoto('hero',1280))}${skyLayer}
+      <div class="phero-body">${liveRow}
+        <div class="dtitle">Trip complete ✦</div>
+        <div class="when">Five days, four neighborhoods, one city. Safe travels home, Daryl.</div>
+      </div></div>`;
+  }
+
+  document.getElementById("dashPad").innerHTML=`
+   <h1 class="lg">Welcome, Daryl</h1>
+   <p class="sub">Five days in New York City.</p>
+   ${hero}
+   <div class="grid2">
+     <div class="stat"><div class="sk">Stops visited</div><div class="sv"><span id="visCount">0</span><small> / ${total}</small></div>
+       <div class="ring"><i style="width:${pct}%"></i></div></div>
+     <div class="stat"><div class="sk">Base</div><div class="sv">Manhattan</div>
+       <div style="font-size:13px;color:var(--muted);margin-top:6px">+ a Brooklyn day</div></div>
+   </div>
+   ${focusList}
+   <div class="glabel">The four days</div>
+   <div class="chips">
+     ${DAYS.map(d=>{const dn=plan[d.n].filter(s=>visited.has(s.id)).length,all=plan[d.n].length>0&&dn===plan[d.n].length;
+       return `<div class="chip" onclick="goDay(${d.n})">${phLayer(dayPhoto(d.n,420))}
+        <div class="chip-scrim"></div><div class="chip-accent" style="background:${d.hex}"></div>
+        <div class="chip-body">
+          <div class="cd"><span class="dot" style="background:${d.hex}"></span>Day ${d.n}${all?'<span class="cdone">✓</span>':''}</div>
+          <div class="cn">${d.title}</div><div class="cc">${dn}/${plan[d.n].length} stops</div></div></div>`;}).join("")}
+   </div>
+   ${upnext}
+   <div class="glabel">Good to know</div>
+   <div class="note">
+     <p><b>Weather:</b> June is warm & humid, highs ~27–30°C (low-to-mid 80s°F), with pop-up afternoon thunderstorms. Pack a compact umbrella and light layers.</p>
+     <p><b>From the airport (11 PM):</b> take a yellow cab or Uber/Lyft straight to your stay. Set up <b>OMNY</b> — tap your phone or contactless card at any turnstile, flat ~$2.90, no MetroCard needed.</p>
+     <p><b>Cash:</b> mostly a card city, but carry ~$40 in small bills for Joe's Pizza and quicker street-cart lines.</p>
+   </div>
+   <div class="foot">Project by Daryl Tan to help Malaysians navigate the streets of The Big Green Apple  · Daryl10.com</div>`;
+  if(!window.__dashSeen){document.getElementById("dashPad").classList.add("reveal");window.__dashSeen=1;}
+  const fEl=document.querySelector(".ring i");if(fEl){fEl.style.width="0";requestAnimationFrame(()=>fEl.style.width=pct+"%");}
+  const bc=document.getElementById("bigCount"),sv=document.getElementById("visCount");
+  if(!window.__dashCounted){if(bc)countUp(bc,window.__count,1100);if(sv)countUp(sv,done,900);window.__dashCounted=1;}
+  else{if(bc)bc.textContent=window.__count;if(sv)sv.textContent=done;}
+  startClock();bindParallax();
+}
+
+/* ===== ITINERARY (editable) ===== */
+let editMode=false;
+function toggleEdit(){editMode=!editMode;renderItin();}
+function renderItin(){
+  document.getElementById("itinPad").innerHTML=`
+   <div class="ihead"><h1 class="lg">Itinerary</h1><button class="editbtn" onclick="toggleEdit()">${editMode?"Done":"Edit"}</button></div>
+   <p class="sub">${editMode?"Drag ⠿ to reorder, tap a time to change it, add or remove stops.":"Tap any stop for the full briefing."}</p>
+   ${DAYS.map(renderDay).join("")}
+   <div class="foot">Your plan saves on this device.</div>`;
+  if(editMode)setTimeout(activateSortables,0);
+}
+function renderDay(d){
+  let rows;
+  if(editMode){
+    rows=plan[d.n].map(it=>{const data=dataOf(it);
+      return `<div class="pitem" data-id="${it.id}">
+        <div class="prow">
+          <span class="handle">⠿</span>
+          <span class="minus" onclick="removeStop(${d.n},'${it.id}')"><span>−</span></span>
+          <span class="ptile" style="background:${tileBG(d.hex)}">${data.glyph||"⭐"}</span>
+          <span class="pname">${data.name}</span>
+          <input class="timein" type="time" value="${it.time}" onchange="setTime(${d.n},'${it.id}',this.value)">
+        </div>
+        <input class="notein" type="text" placeholder="Add a note…" value="${esc(it.notes)}" onchange="setNote('${it.id}',this.value)"></div>`;}).join("");
+    rows+=`<div class="addrow" onclick="openAdd(${d.n})"><span class="addplus">+</span>Add a place</div>`;
+  } else {
+    rows=plan[d.n].length?plan[d.n].map(it=>{const data=dataOf(it);const v=visited.has(it.id)?'done':'';
+      return `<div class="row ${v}" onclick="openSheet('${it.id}')">
+        <div class="tile" style="background:${tileBG(d.hex)}">${data.glyph||"⭐"}<div class="check">✓</div></div>
+        <div class="rt"><div class="rn">${data.name}</div><div class="rd">${rdLine(data)}</div>${it.notes?`<div class="rnote">📝 ${esc(it.notes)}</div>`:""}</div>
+        <div class="rtime">${fmt(it.time)}</div><div class="chev">›</div></div>`;}).join("")
+      :`<div class="row" style="color:var(--muted)">No stops yet — tap Edit to add one.</div>`;
+  }
+  return `<div class="daybanner" id="day${d.n}">${phLayer(dayPhoto(d.n,640))}
+     <div class="daybanner-scrim" style="background:linear-gradient(105deg, ${d.hex}d9 0%, ${d.hex}45 44%, rgba(6,9,18,.6) 100%)"></div>
+     <div class="grain"></div>
+     <div class="daybanner-body">
+       <div class="dnum">${d.n}</div>
+       <div style="min-width:0"><div class="db-t">${d.title}</div><div class="db-d">${d.date}</div></div>
+       <div class="db-r">${d.tag}</div>
+     </div></div>
+    <div class="group daygroup" data-day="${d.n}">${rows}</div>`;
+}
+let sortables=[];
+function activateSortables(){
+  sortables.forEach(s=>{try{s.destroy();}catch(e){}});sortables=[];
+  document.querySelectorAll(".daygroup").forEach(g=>{
+    const dayN=+g.dataset.day;
+    sortables.push(new Sortable(g,{handle:".handle",draggable:".pitem",animation:160,
+      onEnd:()=>{const ids=[...g.querySelectorAll(".pitem")].map(r=>r.dataset.id);
+        plan[dayN]=ids.map(id=>plan[dayN].find(x=>x.id===id)).filter(Boolean);
+        savePlan();renderDash();buildMarkers();}}));
+  });
+}
+function setTime(dayN,id,val){const it=plan[dayN].find(x=>x.id===id);if(it&&val){it.time=val;savePlan();renderDash();buildMarkers();}}
+function removeStop(dayN,id){plan[dayN]=plan[dayN].filter(x=>x.id!==id);savePlan();renderItin();renderDash();buildMarkers();}
+function setNote(id,val){const f=findItem(id);if(f){f.it.notes=val;savePlan();}}
+
+/* ===== ADD A PLACE ===== */
+let addDay=1,addGlyph="⭐",_sug=[],_addPick=null,_results=[],searchTimer=null;
+function openAdd(dayN){
+  addDay=dayN;addGlyph="⭐";_addPick=null;_results=[];
+  const d=dayObj(dayN);
+  const seen=new Set();_sug=[];
+  plan[dayN].forEach(it=>{const data=dataOf(it);(data.near||[]).forEach(n=>{if(!seen.has(n[1])){seen.add(n[1]);_sug.push(n);}});});
+  _sug=_sug.slice(0,8);
+  const glyphs=["⭐","🍕","☕","🍽️","🍸","🏛️","🌳","🛍️","📷","🎭","🍦","🏙️"];
+  let h=`<div class="sheet-hd" style="padding-top:20px"><div class="sheet-eye" style="color:${d.hex}">DAY ${dayN} · ${d.title.toUpperCase()}</div>
+     <div class="sheet-title">Add a place</div></div>
+    <div class="field"><label>Search or name</label><input class="txt" id="addName" type="text" autocomplete="off" placeholder="Search a place, or type any name…" oninput="onAddSearch(this.value)">
+      <div id="addResults" class="results" style="display:none"></div>
+      <div id="pickNote" class="picknote" style="display:none"></div></div>
+    <div class="field"><label>Time</label><input class="tin" id="addTime" type="time" value="12:00"></div>
+    <div class="field"><label>Notes <span style="font-weight:400">(optional)</span></label><textarea class="txt" id="addNotes" placeholder="Anything to remember — a reservation, who you're meeting, what to try…"></textarea></div>
+    <div class="field"><label>Category</label><div class="glyphs" id="addGlyphs">${glyphs.map((g,i)=>`<div class="gopt ${i===0?'on':''}" onclick="pickGlyph(this,'${g}')">${g}</div>`).join("")}</div></div>`;
+  if(_sug.length)h+=`<div class="field"><label>Suggestions nearby</label><div class="sugg">${_sug.map((n,i)=>`<div class="schip" onclick="fillSug(${i})">${n[0]} ${n[1]}</div>`).join("")}</div></div>`;
+  h+=`<button class="bigbtn" id="addBtn" disabled onclick="addStop()">Add to Day ${dayN}</button>`;
+  document.getElementById("sheetBody").innerHTML=h;
+  openSheetEl();
+}
+function pickGlyph(el,g){addGlyph=g;document.querySelectorAll("#addGlyphs .gopt").forEach(x=>x.classList.remove("on"));el.classList.add("on");}
+function fillSug(i){const n=_sug[i];if(!n)return;const inp=document.getElementById("addName");inp.value=n[1];document.getElementById("addBtn").disabled=false;
+  addGlyph=n[0];document.querySelectorAll("#addGlyphs .gopt").forEach(x=>x.classList.toggle("on",x.textContent.trim()===n[0]));}
+function addStop(){
+  const name=document.getElementById("addName").value.trim();if(!name)return;
+  const time=document.getElementById("addTime").value||"12:00";
+  const notes=(document.getElementById("addNotes").value||"").trim();
+  const id="c"+Date.now();
+  const item={id,custom:true,time,name,type:"Added by you",glyph:addGlyph,blurb:"",notes};
+  if(_addPick){item.lat=_addPick.lat;item.lng=_addPick.lng;item.addr=_addPick.display;item.q=_addPick.display;}
+  else item.q=name+" New York";
+  plan[addDay].push(item);
+  savePlan();closeSheet();renderItin();renderDash();buildMarkers();
+  setTimeout(()=>{const el=document.getElementById("day"+addDay);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});},140);
+}
+
+async function searchPlaces(q){
+  const url=`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=en&lat=40.75&lon=-73.98`;
+  const res=await fetch(url);if(!res.ok)return[];
+  const j=await res.json();
+  return (j.features||[]).map(f=>{const p=f.properties||{},c=(f.geometry&&f.geometry.coordinates)||[];
+    const main=p.name||p.street||p.city||"Place";
+    const sub=[(p.housenumber&&p.street)?(p.housenumber+" "+p.street):p.street,p.city,p.state,p.country].filter(Boolean).join(", ");
+    return{lat:c[1],lng:c[0],name:main,sub,display:main+(sub?(", "+sub):"")};}).filter(x=>x.lat!=null);
+}
+function onAddSearch(val){
+  _addPick=null;document.getElementById("pickNote").style.display="none";
+  document.getElementById("addBtn").disabled=!val.trim();
+  const box=document.getElementById("addResults");
+  clearTimeout(searchTimer);
+  if(val.trim().length<3){box.style.display="none";box.innerHTML="";return;}
+  box.style.display="block";box.innerHTML='<div class="sres muted">Searching…</div>';
+  searchTimer=setTimeout(async()=>{
+    try{const r=await searchPlaces(val.trim());_results=r;
+      if(!r.length){box.innerHTML='<div class="sres muted">No matches — you can still add this as a custom stop.</div>';return;}
+      box.innerHTML=r.map((p,i)=>`<div class="sres" onclick="pickResult(${i})"><div class="sres-t"><div class="sres-n">${esc(p.name)}</div><div class="sres-s">${esc(p.sub||p.display)}</div></div><a class="sres-map" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a></div>`).join("");
+    }catch(e){box.innerHTML='<div class="sres muted">Search needs a connection — type a name to add it manually.</div>';}
+  },350);
+}
+function pickResult(i){
+  const p=_results[i];if(!p)return;
+  _addPick={lat:p.lat,lng:p.lng,name:p.name,display:p.display};
+  document.getElementById("addName").value=p.name;
+  document.getElementById("addBtn").disabled=false;
+  const box=document.getElementById("addResults");box.style.display="none";box.innerHTML="";
+  const pn=document.getElementById("pickNote");pn.style.display="block";pn.textContent="📍 "+p.display;
+}
+
+/* ===== DETAIL SHEET ===== */
+let sheetMap=null;
+function openSheetEl(){document.getElementById("scrim").classList.add("open");const sh=document.getElementById("sheet");sh.scrollTop=0;sh.classList.add("open");document.body.style.overflow="hidden";}
+function openSheet(id){
+  const found=findItem(id);if(!found)return;
+  const it=found.it,d=dayObj(found.dayN),data=dataOf(it),time=fmt(it.time);
+  const hasMap=data.lat!=null;
+  let h=`<div class="shero">${phLayer(dayPhoto(d.n,1100))}
+      <div class="shero-scrim" style="background:linear-gradient(to top, rgba(6,9,18,.9) 4%, ${d.hex}40 46%, ${d.hex}26 100%)"></div>
+      <div class="grain"></div>
+      <div class="shero-glyph">${data.glyph||"⭐"}</div>
+      <div class="shero-body">
+        <div class="shero-eye">Day ${d.n} · ${d.title} · ${time}</div>
+        <div class="shero-title">${data.name}</div>
+        <div class="shero-addr">${data.addr||(it.custom?"Added by you":"")}</div>
+      </div></div>
+    <div class="acts">
+      <a class="act primary" href="${gmapsDir(data.q||data.name)}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 21s7-6.7 7-12a7 7 0 1 0-14 0c0 5.3 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>Directions</a>
+      <a class="act" href="${gphotos(data.q||data.name)}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="1.6"/><path d="m4 18 5-4 4 3 3-2 4 3"/></svg>Photos</a>
+      <button class="act ${visited.has(id)?'is-done':''}" id="visBtn" onclick="toggleVisit('${id}')">
+        <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17l9-10"/></svg>${visited.has(id)?'Visited':'Visit'}</button>
+    </div>`;
+  if(hasMap)h+=`<div class="sec"><div class="sec-l">Location</div><div class="smap-card"><div id="sheetMap"></div></div></div>`;
+  h+=`<div class="sec"><div class="sec-l">Your notes</div><div class="sbox"><textarea class="notebox" placeholder="Add a note for this stop…" onchange="setNote('${id}',this.value)">${esc(it.notes)}</textarea></div></div>`;
+  if(data.know||data.story)h+=`<div class="sec"><div class="sec-l">About</div><div class="sbox"><p>${data.know||data.story}</p></div></div>`;
+  else if(it.custom)h+=`<div class="sec"><div class="sec-l">About</div><div class="sbox"><p>A stop you added to Day ${d.n}. Use Directions and Photos below, or change its time and order in the Plan tab.</p></div></div>`;
+  if(data.order){h+=`<div class="sec"><div class="sec-l">What to order</div><div class="sbox">`;
+    data.order.forEach(o=>h+=`<div class="ord"><span class="om">${o[0]}</span><span class="ox"><b>${o[1]}</b> — ${o[2]}</span></div>`);
+    h+=`<div class="pay">💳 <span><b>Payment.</b> ${data.pay}</span></div></div></div>`;}
+  if(data.know&&data.story)h+=`<div class="sec"><div class="sec-l">History & lore</div><div class="sbox story"><p>${data.story}</p></div></div>`;
+  if(data.tips){h+=`<div class="sec"><div class="sec-l">Insider tips</div><div class="sbox">`;
+    data.tips.forEach(t=>h+=`<div class="tip"><span class="tm">›</span><span>${t}</span></div>`);h+=`</div></div>`;}
+  if(data.subway){h+=`<div class="sec"><div class="sec-l">Getting there</div><div class="sbox">`;
+    data.subway.forEach(n=>h+=`<div class="nav-l"><div class="bset">${bullets(n[0])}</div><div class="nx">${n[1]}</div></div>`);h+=`</div></div>`;}
+  if(data.near){h+=`<div class="sec"><div class="sec-l">Nearby & worth a detour</div><div class="sbox">`;
+    data.near.forEach(n=>h+=`<div class="nearrow"><span class="nglyph">${n[0]}</span><div><div class="nn">${n[1]}</div><div class="nd">${n[2]}</div></div></div>`);h+=`</div></div>`;}
+
+  document.getElementById("sheetBody").innerHTML=h;
+  openSheetEl();
+  if(hasMap)setTimeout(()=>{
+    if(sheetMap){sheetMap.remove();sheetMap=null;}
+    sheetMap=L.map("sheetMap",{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false}).setView([data.lat,data.lng],15);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{maxZoom:19}).addTo(sheetMap);
+    L.marker([data.lat,data.lng],{icon:pinIcon(d.hex,data.glyph)}).addTo(sheetMap);
+    sheetMap.invalidateSize();
+  },300);
+}
+function closeSheet(){
+  document.getElementById("scrim").classList.remove("open");
+  document.getElementById("sheet").classList.remove("open");
+  document.body.style.overflow="";
+  setTimeout(()=>{if(sheetMap){sheetMap.remove();sheetMap=null;}},300);
+}
+function toggleVisit(id){
+  if(visited.has(id))visited.delete(id);else visited.add(id);saveVisited();
+  const b=document.getElementById("visBtn");
+  if(b){const on=visited.has(id);b.className=`act ${on?'is-done':''}`;b.innerHTML=`<svg viewBox="0 0 24 24"><path d="M5 12.5 10 17l9-10"/></svg>${on?'Visited':'Visit'}`;}
+  renderDash();renderItin();
+}
+
+/* ===== MAP ===== */
+let bigMap=null,markers={},mapFilter=0;
+function pinIcon(hex,glyph){return L.divIcon({className:"",html:`<div class="pin" style="background:${hex}"><span>${glyph||""}</span></div>`,iconSize:[26,26],iconAnchor:[13,24],popupAnchor:[0,-22]});}
+function buildMarkers(){
+  if(!bigMap)return;
+  Object.values(markers).forEach(o=>o.m.remove());markers={};
+  DAYS.forEach(d=>plan[d.n].forEach((it,i)=>{const st=dataOf(it);if(st.lat==null)return;
+    const m=L.marker([st.lat,st.lng],{icon:pinIcon(d.hex,i+1)});
+    m.bindPopup(`<div class="pop-n">${st.glyph} ${st.name}</div><div class="pop-d">Day ${d.n} · ${fmt(it.time)}</div><span class="pop-b" onclick="closePopupOpen('${it.id}')">View details ›</span>`);
+    markers[it.id]={m,day:d.n};
+    if(mapFilter===0||mapFilter===d.n)m.addTo(bigMap);}));
+}
+function initMap(){
+  bigMap=L.map("mapFull",{zoomControl:true,attributionControl:true}).setView([40.745,-73.99],12.2);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{maxZoom:19,attribution:'© OpenStreetMap, © CARTO'}).addTo(bigMap);
+  buildMarkers();
+  document.getElementById("dayseg").innerHTML=`<button class="on" onclick="filterDay(0,this)">All</button>`+DAYS.map(d=>`<button onclick="filterDay(${d.n},this)">Day ${d.n}</button>`).join("");
+}
+function fitAll(pad){const pts=[];DAYS.forEach(d=>plan[d.n].forEach(it=>{const st=dataOf(it);if(st.lat!=null)pts.push([st.lat,st.lng]);}));if(pts.length)bigMap.fitBounds(L.latLngBounds(pts),{padding:[pad,pad]});}
+function filterDay(n,btn){
+  mapFilter=n;document.querySelectorAll("#dayseg button").forEach(b=>b.classList.remove("on"));btn.classList.add("on");
+  const pts=[];
+  DAYS.forEach(d=>plan[d.n].forEach(it=>{const o=markers[it.id];if(!o)return;
+    if(n===0||o.day===n){o.m.addTo(bigMap);const st=dataOf(it);pts.push([st.lat,st.lng]);}else o.m.remove();}));
+  if(pts.length)bigMap.fitBounds(L.latLngBounds(pts),{padding:[50,50],maxZoom:14});
+}
+function closePopupOpen(id){bigMap.closePopup();openSheet(id);}
+
+/* ===== TIPS ===== */
+function renderTips(){
+  document.getElementById("tipsPad").innerHTML=`
+   <div class="guidehero">${phLayer(dayPhoto(3,900))}
+     <div class="guidehero-scrim"></div><div class="grain"></div>
+     <div class="guidehero-body"><h1>Guide</h1><p>How to move like a local.</p></div>
+   </div>
+   <div class="tipcard" style="border-color:var(--blue)">
+     <h3>📲 Add to Home Screen</h3>
+     <ul class="install">
+       <li>Open this page in <b>Safari</b> (iPhone) or <b>Chrome</b> (Android).</li>
+       <li>Tap <b>Share</b> (iPhone) or the <b>⋮ menu</b> (Android).</li>
+       <li>Choose <b>Add to Home Screen</b>.</li>
+       <li>Name it <b>NYC ’26</b> → Add. It opens full-screen like an app.</li>
+     </ul>
+   </div>
+
+   <div class="tipcard"><h3>🚇 The subway</h3><ul>
+     <li><b>OMNY:</b> tap your phone or contactless card at the turnstile — flat ~$2.90, no MetroCard.</li>
+     <li><b>Uptown = north, Downtown = south.</b> Check the entrance sign before you tap; they're often separate.</li>
+     <li><b>Express vs local:</b> express skips stops. If unsure, take the local.</li>
+     <li>Trust <b>Google Maps</b> live transit directions — they're excellent in NYC.</li>
+   </ul></div>
+
+   <div class="tipcard"><h3>💸 Money & tipping</h3><ul>
+     <li>Tip ~18–20% at sit-down restaurants, $1–2 per drink at bars.</li>
+     <li>Card / Apple Pay almost everywhere; keep ~$40 cash for Joe's Pizza & carts.</li>
+     <li>Listed prices exclude ~8.875% sales tax — totals run a bit higher.</li>
+   </ul></div>
+
+   <div class="tipcard"><h3>🚶 Street smarts</h3><ul>
+     <li>Walk with purpose, keep right, don't stop dead in foot traffic.</li>
+     <li>Avenues run north–south, streets east–west; higher numbers = further north.</li>
+     <li>Famous-spot lines move fast — have your order ready.</li>
+   </ul></div>
+
+   <div class="tipcard"><h3>⏱️ Timing</h3><ul>
+     <li>Hit big sights before 10 AM or near sunset to dodge crowds.</li>
+     <li>Times Square is best after dark; Brooklyn Bridge & DUMBO at golden hour.</li>
+     <li>Museums are huge — pick a few rooms, don't try to "finish" them.</li>
+   </ul></div>
+
+   <div class="tipcard"><h3>🛟 Good to know</h3><ul>
+     <li>Emergencies <b>911</b> · non-emergency city info <b>311</b>.</li>
+     <li>Restrooms are scarce — use cafés, hotels and big stores when you can.</li>
+     <li>Free skyline views: Staten Island Ferry, Brooklyn Bridge Park, the bridge walk.</li>
+   </ul></div>
+
+   <div class="foot">Project by Daryl Tan to help Malaysians navigate the streets of The Big Green Apple  · Daryl10.com</div>`;
+}
+
+/* ===== NAV ===== */
+const titles={dashboard:["New York City","Jun 16–21"],itinerary:["Itinerary","Edit to customize"],map:["Map","Your stops"],tips:["Guide",""]};
+function show(tab){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+tab).classList.add("active");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===tab));
+  document.getElementById("navLeft").textContent=titles[tab][0];
+  document.getElementById("navRight").textContent=titles[tab][1];
+  if(tab==="map"){if(!bigMap)initMap();setTimeout(()=>{bigMap.invalidateSize();if(mapFilter===0)fitAll(40);},120);}
+  if(tab!=="map")window.scrollTo(0,0);
+}
+function goDay(n){show("itinerary");setTimeout(()=>{const el=document.getElementById("day"+n);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});},80);}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>show(t.dataset.tab)));
+document.getElementById("scrim").addEventListener("click",closeSheet);
+
+renderDash();renderItin();renderTips();
+</script>
+</body>
+</html>
