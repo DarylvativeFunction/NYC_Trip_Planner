@@ -224,6 +224,59 @@
   .bigbtn{margin:20px 18px 4px;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:13px;font-family:var(--sf);font-size:16px;font-weight:600;width:calc(100% - 36px);cursor:pointer}
   .bigbtn:disabled{opacity:.4}
 
+  /* travel-time connector between stops (Plan tab) */
+  .leg{position:relative;display:flex;align-items:center;min-height:30px;
+    padding:6px 15px 6px 64px;background:var(--card);border-bottom:.5px solid var(--hair);
+    font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:-.01em}
+  .leg::before{content:"";position:absolute;left:35px;top:0;bottom:0;width:2px;
+    background:repeating-linear-gradient(var(--hair2) 0 3px,transparent 3px 6px)}
+  .leg .lp{display:inline-flex;align-items:center;gap:5px}
+  .leg .lg-ico{font-size:13px}
+  /* out-of-order time warning under a stop name */
+  .rwarn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--d4);
+    font-weight:600;margin-top:2px}
+
+  /* ===== PLACES (guidebook cards) ===== */
+  body.wide .wrap{max-width:1180px}
+  body.wide .tabs{max-width:1180px}
+  .pfilters{margin:14px 0 2px}
+  .pfilt-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+  .pchip{flex:none;border:.5px solid var(--hair);background:var(--card);border-radius:11px;
+    padding:8px 14px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap;
+    transition:transform .12s ease}
+  .pchip:active{transform:scale(.96)}
+  .pchip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pcount{font-size:13px;color:var(--muted);margin:4px 4px 14px}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;align-items:start}
+  .pcard{background:var(--card);border:.5px solid var(--hair);border-radius:16px;overflow:hidden;
+    display:flex;flex-direction:column;box-shadow:0 8px 22px -18px rgba(0,0,0,.4)}
+  .pcard-img{position:relative;height:200px;overflow:hidden;isolation:isolate}
+  .pcard-img .ph{z-index:1}
+  .pcard-glyph{position:absolute;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;
+    font-size:62px;color:rgba(255,255,255,.92)}
+  .pcard-cat{position:absolute;top:11px;left:11px;z-index:2;font-size:11px;font-weight:700;
+    letter-spacing:.03em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.42);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:5px 10px;border-radius:8px}
+  .pcard-body{padding:15px 17px 17px}
+  .pcard-meta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    font-size:12px;color:var(--muted);font-weight:600}
+  .pcard-meta .pm-time{color:var(--blue);white-space:nowrap}
+  .pcard-name{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:5px 0 2px;line-height:1.1}
+  .pcard-addr{font-size:13px;color:var(--muted)}
+  .pcard-lines{display:flex;gap:4px;flex-wrap:wrap;margin:11px 0 3px}
+  .pc-sec{padding:11px 0;border-bottom:.5px solid var(--hair)}
+  .pc-sec:last-of-type{border-bottom:none}
+  .pc-k{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:3px}
+  .pc-v{font-size:13.5px;color:var(--ink2);line-height:1.5}
+  .pc-acts{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
+  .pc-btn{flex:1;min-width:84px;text-align:center;border:.5px solid var(--hair);border-radius:10px;
+    padding:9px 8px;font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;background:var(--card)}
+  .pc-btn:active{background:var(--bg2)}
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .fnote{background:var(--card);border:.5px solid var(--hair);border-radius:13px;padding:14px 15px}
+  .fnote h4{font-size:15px;font-weight:700;margin:0 0 6px;letter-spacing:-.01em}
+  .fnote p{font-size:13px;color:var(--ink2);line-height:1.5;margin:0}
+
   /* ============================================================
      LIVELY LAYER — cinematic photography, motion, atmosphere
      ============================================================ */
@@ -337,6 +390,14 @@
     .live-dot{animation:none!important}
     .reveal>*{opacity:1!important;transform:none!important;animation:none!important}
   }
+
+  /* ===== motion & micro-interactions ===== */
+  @keyframes fade{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
+  .view.active{animation:fade .36s cubic-bezier(.22,1,.36,1)}
+  .act,.pc-btn,.schip,.gopt,.chip,.pchip,.tab{transition:transform .13s cubic-bezier(.22,1,.36,1),background .2s ease,color .2s ease}
+  .act:active,.pc-btn:active,.gopt:active,.pchip:active,.chip:active{transform:scale(.955)}
+  .tab:active{transform:scale(.9)}
+  @media (prefers-reduced-motion:reduce){.view.active{animation:none!important}}
 </style>
 </head>
 <body>
@@ -352,6 +413,7 @@
     <div id="mapFull"></div>
   </section>
   <section class="view" id="view-tips"><div class="pad" id="tipsPad"></div></section>
+  <section class="view" id="view-places"><div class="pad" id="placesPad"></div></section>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -364,6 +426,8 @@
     <svg viewBox="0 0 24 24"><circle cx="6" cy="7" r="1.8"/><circle cx="6" cy="17" r="1.8"/><path d="M11 7h9M11 17h9M11 12h6"/></svg>Plan</button>
   <button class="tab" data-tab="map">
     <svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke-linejoin="round"/><path d="M9 4v14M15 6v14"/></svg>Map</button>
+  <button class="tab" data-tab="places">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11" stroke-linejoin="round"/></svg>Places</button>
   <button class="tab" data-tab="tips">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Guide</button>
 </nav>
@@ -518,6 +582,27 @@ const S={
   near:[["⛪","St. John the Divine","Colossal unfinished Gothic cathedral, 5 min south."],["🌅","Riverside Park","Quiet Hudson-side park west of campus."],["☕","Tom's Restaurant","The diner facade from Seinfeld, at 112th & Broadway."]]},
 };
 
+/* ===== PLACES MEDIA — Wikimedia Commons photos + Wikipedia sources ===== */
+const PLACE_MEDIA={
+ joes:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Joe%27s_Pizza%2C_Greenwich_Village%2C_NYC.jpg/960px-Joe%27s_Pizza%2C_Greenwich_Village%2C_NYC.jpg",src:"https://en.wikipedia.org/wiki/Joe%27s_Pizza"},
+ wsp:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Washington_Square_Arch-Isabella.jpg/960px-Washington_Square_Arch-Isabella.jpg",src:"https://en.wikipedia.org/wiki/Washington_Square_Park"},
+ nyu:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Bobst_Library_south_facade.jpg/960px-Bobst_Library_south_facade.jpg",src:"https://en.wikipedia.org/wiki/New_York_University"},
+ magnolia:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Magnolia_Bakery%2C_401_Bleecker_Street%2C_New_York%2C_NY_10014%2C_USA_-_Jan_2013_O.jpg/960px-Magnolia_Bakery%2C_401_Bleecker_Street%2C_New_York%2C_NY_10014%2C_USA_-_Jan_2013_O.jpg",src:"https://en.wikipedia.org/wiki/Magnolia_Bakery"},
+ bull:{img:"images/charging-bull.jpg",src:"https://en.wikipedia.org/wiki/Charging_Bull"},
+ wallst:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Federal_Hall_%2848126566178%29.jpg/960px-Federal_Hall_%2848126566178%29.jpg",src:"https://en.wikipedia.org/wiki/Wall_Street"},
+ bridge:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Brooklyn_Bridge_and_the_Lower_Manhattan_skyline_from_Pebble_Beach%2C_New_York.jpg/960px-Brooklyn_Bridge_and_the_Lower_Manhattan_skyline_from_Pebble_Beach%2C_New_York.jpg",src:"https://en.wikipedia.org/wiki/Brooklyn_Bridge"},
+ dumbo:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/DUMBO_Brooklyn%2C_as_seen_from_the_viewing_gallery_of_One_World_Trade_Center.jpg/960px-DUMBO_Brooklyn%2C_as_seen_from_the_viewing_gallery_of_One_World_Trade_Center.jpg",src:"https://en.wikipedia.org/wiki/Dumbo,_Brooklyn"},
+ liberty:{img:"images/liberty-bagels.jpg",src:"https://libertybagels.com/"},
+ times:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/New_york_times_square-terabass.jpg/960px-New_york_times_square-terabass.jpg",src:"https://en.wikipedia.org/wiki/Times_Square"},
+ halal:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/The_Halal_Guys_restaurant_at_Union_Station_in_Washington%2C_D.C.jpg/960px-The_Halal_Guys_restaurant_at_Union_Station_in_Washington%2C_D.C.jpg",src:"https://en.wikipedia.org/wiki/The_Halal_Guys"},
+ levain:{img:"https://upload.wikimedia.org/wikipedia/commons/c/c9/Storefrontny.jpg",src:"https://en.wikipedia.org/wiki/Levain_Bakery"},
+ cpsouth:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Global_Citizen_Festival_Central_Park_New_York_City_from_NYonAir_%2815351915006%29.jpg/960px-Global_Citizen_Festival_Central_Park_New_York_City_from_NYonAir_%2815351915006%29.jpg",src:"https://en.wikipedia.org/wiki/Central_Park"},
+ cpheart:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Bethesda_Terrace_and_Fountain%2C_Central_Park%2C_2025.jpg/960px-Bethesda_Terrace_and_Fountain%2C_Central_Park%2C_2025.jpg",src:"https://en.wikipedia.org/wiki/Bethesda_Terrace_and_Fountain"},
+ columbia:{img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Columbia_University_-_Low_Memorial_Library_%2848170370506%29.jpg/960px-Columbia_University_-_Low_Memorial_Library_%2848170370506%29.jpg",src:"https://en.wikipedia.org/wiki/Columbia_University"},
+};
+const CAT_OF={Pizza:"Food",Bakery:"Food",Bagels:"Food","Street food":"Food",Landmark:"Landmarks",Neighborhood:"Landmarks",Park:"Parks",Campus:"Campuses"};
+function placeCat(data){return CAT_OF[data.type]||"Landmarks";}
+
 /* ===== HELPERS ===== */
 function bullets(str){return str.split(" ").map(l=>{const c=lineColor[l]||"#777";const b=blkText.has(l)?" blk":"";return `<span class="mb${b}" style="background:${c}">${l}</span>`;}).join("");}
 const gmapsDir=q=>`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}`;
@@ -582,6 +667,33 @@ function findItem(id){for(const d of DAYS){const it=plan[d.n].find(x=>x.id===id)
 function dataOf(it){return it.custom?it:S[it.id];}
 function planFlat(){const a=[];DAYS.forEach(d=>plan[d.n].forEach(it=>a.push({...it,dayN:d.n})));return a;}
 function rdLine(data){return (data.type||"Place")+(data.blurb?(" · "+data.blurb):"");}
+
+/* ===== TRAVEL-TIME ESTIMATES =====
+   Straight-line (haversine) distance → a rough but honest walk/subway estimate.
+   No network needed: works offline from the coordinates already in the data. */
+function haversineKm(lat1,lng1,lat2,lng2){
+  const R=6371,toR=x=>x*Math.PI/180;
+  const dLat=toR(lat2-lat1),dLng=toR(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toR(lat1))*Math.cos(toR(lat2))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+/* legBetween: walk for short hops, otherwise a subway estimate.
+   Walk pace ~4.5 km/h on a grid (≈13 min/km incl. lights/crossings).
+   Subway model: ~8 min fixed (walk to platform + wait) + ~3 min/km riding. */
+function legBetween(a,b){
+  const da=dataOf(a),db=dataOf(b);
+  if(da.lat==null||db.lat==null)return null;
+  let km=haversineKm(da.lat,da.lng,db.lat,db.lng)*1.25; /* grid detour factor */
+  const walk=Math.max(1,Math.round(km*13));
+  if(walk<=22)return{mode:"walk",icon:"🚶",label:"walk",min:walk,km};
+  const sub=Math.round(8+km*3);
+  return{mode:"subway",icon:"🚇",label:"subway",min:sub,km};
+}
+function legPill(it,next){
+  const lg=legBetween(it,next);
+  if(!lg)return"";
+  return `<div class="leg"><span class="lp"><span class="lg-ico">${lg.icon}</span>~${lg.min} min ${lg.label}</span></div>`;
+}
 
 /* ===== OVERVIEW ===== */
 function getFocus(){
@@ -704,11 +816,16 @@ function renderDay(d){
         <input class="notein" type="text" placeholder="Add a note…" value="${esc(it.notes)}" onchange="setNote('${it.id}',this.value)"></div>`;}).join("");
     rows+=`<div class="addrow" onclick="openAdd(${d.n})"><span class="addplus">+</span>Add a place</div>`;
   } else {
-    rows=plan[d.n].length?plan[d.n].map(it=>{const data=dataOf(it);const v=visited.has(it.id)?'done':'';
-      return `<div class="row ${v}" onclick="openSheet('${it.id}')">
+    const arr=plan[d.n];
+    rows=arr.length?arr.map((it,i)=>{const data=dataOf(it);const v=visited.has(it.id)?'done':'';
+      const prev=i>0?arr[i-1]:null;
+      const outOfOrder=prev&&it.time&&prev.time&&it.time<prev.time;
+      const warn=outOfOrder?`<div class="rwarn">⚠︎ earlier than the stop above</div>`:"";
+      const row=`<div class="row ${v}" onclick="openSheet('${it.id}')">
         <div class="tile" style="background:${tileBG(d.hex)}">${data.glyph||"⭐"}<div class="check">✓</div></div>
-        <div class="rt"><div class="rn">${data.name}</div><div class="rd">${rdLine(data)}</div>${it.notes?`<div class="rnote">📝 ${esc(it.notes)}</div>`:""}</div>
-        <div class="rtime">${fmt(it.time)}</div><div class="chev">›</div></div>`;}).join("")
+        <div class="rt"><div class="rn">${data.name}</div><div class="rd">${rdLine(data)}</div>${warn}${it.notes?`<div class="rnote">📝 ${esc(it.notes)}</div>`:""}</div>
+        <div class="rtime">${fmt(it.time)}</div><div class="chev">›</div></div>`;
+      return row+(i<arr.length-1?legPill(it,arr[i+1]):"");}).join("")
       :`<div class="row" style="color:var(--muted)">No stops yet — tap Edit to add one.</div>`;
   }
   return `<div class="daybanner" id="day${d.n}">${phLayer(dayPhoto(d.n,640))}
@@ -947,12 +1064,95 @@ function renderTips(){
    <div class="foot">Project by Daryl Tan to help Malaysians navigate the streets of The Big Green Apple  · Daryl10.com</div>`;
 }
 
+/* ===== PLACES (guidebook) ===== */
+let placesCat="All",placesDay=0;
+const PLACE_CATS=["All","Food","Landmarks","Parks","Campuses"];
+const gmapsTransit=q=>`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}&travelmode=transit`;
+function placeList(){const a=[];DAYS.forEach(d=>d.stops.forEach(id=>{if(S[id])a.push({id,dayN:d.n,day:d});}));return a;}
+function mealOf(t24){const h=+String(t24).split(":")[0];if(h<11)return"breakfast";if(h<15)return"lunch";if(h<18)return"afternoon";return"evening";}
+function timingLabel(day,t24){const wd=new Date(day.dateISO+"T12:00:00").toLocaleDateString("en-US",{weekday:"short"});return wd+" "+mealOf(t24);}
+function hoodOf(data){const p=(data.addr||"").split(",");return p.length>1?p[p.length-1].trim():"";}
+function famousPicks(data){if(data.order&&data.order.length)return data.order.map(o=>o[1]).join(", ")+".";return data.blurb?data.blurb+".":"";}
+function subwayLineSet(data){const seen=new Set(),out=[];(data.subway||[]).forEach(e=>e[0].split(" ").forEach(l=>{if(!seen.has(l)){seen.add(l);out.push(l);}}));return out;}
+function subwayText(data){return (data.subway||[]).map(e=>e[1]).join(" · ");}
+const FIELD_NOTES=[
+ ["Transit","Use the same contactless card or phone for every OMNY tap to benefit from fare capping. Subway/bus base fare is about $2.90. Check live service before weekend rides."],
+ ["Food carts","Ask the price before ordering, especially around tourist zones. Small cash is useful, but do not assume a cart is cash-only."],
+ ["Times Square","Costumed characters expect tips for photos. Agree a price first, or just keep walking — and watch your pockets."],
+ ["Pacing","Plan one anchor meal and one anchor sight per half-day. NYC rewards wandering but punishes cross-town zigzags."],
+ ["Parks","Central Park is best in the morning. Washington Square is best when you have time to sit and watch."],
+ ["Campus visits","Columbia and NYU building access can be limited. Treat both as architecture and neighborhood walks unless you confirm visitor access."],
+ ["Photos","The Brooklyn Bridge is calmer early. For the classic skyline shot, finish in DUMBO and walk down to Pebble Beach."],
+ ["Money","Use tap-to-pay for transit and most venues. Carry $20–$40 in small bills for carts, tips and backup."],
+];
+const ADDONS=[["Near Levain + Central Park","levain"],["Near Columbia","columbia"],["Near NYU + Washington Square","nyu"],["Near Wall Street","wallst"],["Near Brooklyn Bridge","bridge"],["Near Times Square","times"]];
+
+function placeCard(e){
+  const data=S[e.id],d=e.day,m=PLACE_MEDIA[e.id]||{};
+  const cat=placeCat(data);
+  const hood=hoodOf(data)||d.title;
+  const timing=timingLabel(d,to24(data.time));
+  const pay=data.pay||"Mostly free. Tap-to-pay covers transit, cafés and snacks nearby.";
+  const need=data.know||data.story||data.blurb||"";
+  const move=(data.tips&&data.tips[0])||"";
+  const picks=famousPicks(data);
+  const q=data.q||data.name;
+  const lines=subwayLineSet(data).map(l=>{const c=lineColor[l]||"#777";const b=blkText.has(l)?" blk":"";return `<span class="mb${b}" style="background:${c}">${l}</span>`;}).join("");
+  return `<div class="pcard" data-cat="${cat}" data-day="${e.dayN}">
+    <div class="pcard-img" style="background:linear-gradient(150deg, ${d.hex}, ${d.hex}99)">
+      ${m.img?phLayer(m.img):""}<div class="pcard-glyph">${data.glyph||"⭐"}</div>
+      <div class="pcard-cat">${cat}</div></div>
+    <div class="pcard-body">
+      <div class="pcard-meta"><span>${esc(hood)}</span><span class="pm-time">${timing}</span></div>
+      <div class="pcard-name">${esc(data.name)}</div>
+      <div class="pcard-addr">${esc(data.addr||"")}</div>
+      ${lines?`<div class="pcard-lines">${lines}</div>`:""}
+      ${picks?`<div class="pc-sec"><div class="pc-k">Famous picks</div><div class="pc-v">${picks}</div></div>`:""}
+      ${need?`<div class="pc-sec"><div class="pc-k">Need to know</div><div class="pc-v">${need}</div></div>`:""}
+      ${move?`<div class="pc-sec"><div class="pc-k">Insider move</div><div class="pc-v">${move}</div></div>`:""}
+      <div class="pc-sec"><div class="pc-k">Payment</div><div class="pc-v">${pay}</div></div>
+      ${subwayText(data)?`<div class="pc-sec"><div class="pc-k">Subway</div><div class="pc-v">${subwayText(data)}</div></div>`:""}
+      ${data.near?`<div class="pc-sec"><div class="pc-k">Nearby</div><div class="pc-v">${data.near.map(n=>esc(n[1])).join(", ")}.</div></div>`:""}
+      <div class="pc-acts">
+        <a class="pc-btn" href="${gmapsDir(q)}" target="_blank" rel="noopener">Open Maps</a>
+        <a class="pc-btn" href="${gmapsTransit(q)}" target="_blank" rel="noopener">Transit</a>
+        ${m.src?`<a class="pc-btn" href="${m.src}" target="_blank" rel="noopener">Source</a>`:""}
+      </div>
+    </div></div>`;
+}
+function renderPlaces(){
+  const list=placeList();
+  const shown=list.filter(e=>{const okC=placesCat==="All"||placeCat(S[e.id])===placesCat;const okD=placesDay===0||e.dayN===placesDay;return okC&&okD;});
+  const catRow=PLACE_CATS.map(c=>`<div class="pchip ${placesCat===c?'on':''}" onclick="setPCat('${c}')">${c}</div>`).join("");
+  const dayRow=`<div class="pchip ${placesDay===0?'on':''}" onclick="setPDay(0)">All days</div>`+
+    DAYS.map(d=>`<div class="pchip ${placesDay===d.n?'on':''}" onclick="setPDay(${d.n})">Day ${d.n}</div>`).join("");
+  const cards=shown.length?`<div class="pgrid">${shown.map(placeCard).join("")}</div>`
+    :`<div class="pcount">No places match this filter.</div>`;
+  document.getElementById("placesPad").innerHTML=`
+   <h1 class="lg">Places</h1>
+   <p class="sub">What to know at each stop.</p>
+   <div class="pfilters">
+     <div class="pfilt-row">${catRow}</div>
+     <div class="pfilt-row">${dayRow}</div>
+   </div>
+   <div class="pcount">${shown.length} place${shown.length===1?"":"s"}</div>
+   ${cards}
+   <div class="glabel" style="margin-top:30px">Field notes · small things that save time</div>
+   <div class="fgrid">${FIELD_NOTES.map(f=>`<div class="fnote"><h4>${f[0]}</h4><p>${f[1]}</p></div>`).join("")}</div>
+   <div class="glabel" style="margin-top:26px">Nearby add-ons · flexible extras</div>
+   <div class="fgrid">${ADDONS.map(a=>{const dd=S[a[1]];return `<div class="fnote"><h4>${esc(a[0])}</h4><p>${(dd.near||[]).map(n=>esc(n[1])).join(", ")}.</p></div>`;}).join("")}</div>
+   <div class="foot">Photos & facts via Wikipedia / Wikimedia Commons.</div>`;
+}
+function setPCat(c){placesCat=c;renderPlaces();}
+function setPDay(n){placesDay=n;renderPlaces();}
+
 /* ===== NAV ===== */
-const titles={dashboard:["New York City","Jun 16–21"],itinerary:["Itinerary","Edit to customize"],map:["Map","Your stops"],tips:["Guide",""]};
+const titles={dashboard:["New York City","Jun 16–21"],itinerary:["Itinerary","Edit to customize"],map:["Map","Your stops"],tips:["Guide",""],places:["Places","Guidebook"]};
 function show(tab){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById("view-"+tab).classList.add("active");
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===tab));
+  document.body.classList.toggle("wide",tab==="places");
   document.getElementById("navLeft").textContent=titles[tab][0];
   document.getElementById("navRight").textContent=titles[tab][1];
   if(tab==="map"){if(!bigMap)initMap();setTimeout(()=>{bigMap.invalidateSize();if(mapFilter===0)fitAll(40);},120);}
@@ -962,7 +1162,32 @@ function goDay(n){show("itinerary");setTimeout(()=>{const el=document.getElement
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>show(t.dataset.tab)));
 document.getElementById("scrim").addEventListener("click",closeSheet);
 
-renderDash();renderItin();renderTips();
+/* ===== APPLE POLISH — haptics + sheet gestures ===== */
+function hapt(ms){try{if(navigator.vibrate)navigator.vibrate(ms||7);}catch(e){}}
+/* one delegated listener → subtle tap feedback on every key control (no-op on iOS Safari) */
+document.addEventListener("click",e=>{
+  if(e.target.closest(".tab,.pchip,.act,.pc-btn,.row,.chip,.schip,.gopt,.addrow,.editbtn,.bigbtn,.seg button,.sugg .schip"))hapt(7);
+},{passive:true});
+/* swipe-down-to-dismiss the bottom sheet + Escape to close */
+(function(){
+  const sheet=document.getElementById("sheet");if(!sheet)return;
+  let sy=0,cy=0,drag=false;
+  sheet.addEventListener("touchstart",e=>{
+    if(sheet.scrollTop>3){drag=false;return;}
+    sy=cy=e.touches[0].clientY;drag=true;sheet.style.transition="none";
+  },{passive:true});
+  sheet.addEventListener("touchmove",e=>{
+    if(!drag)return;cy=e.touches[0].clientY;const dy=cy-sy;
+    if(dy>0)sheet.style.transform="translateY("+(dy*0.92)+"px)";
+  },{passive:true});
+  sheet.addEventListener("touchend",()=>{
+    if(!drag)return;drag=false;sheet.style.transition="";sheet.style.transform="";
+    if(cy-sy>120){hapt(11);closeSheet();}
+  },{passive:true});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
+})();
+
+renderDash();renderItin();renderTips();renderPlaces();
 </script>
 </body>
 </html>
